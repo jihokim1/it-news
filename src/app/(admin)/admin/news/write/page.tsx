@@ -3,13 +3,15 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation"; 
 import { saveNews, deleteImageAction, getNewsById } from "@/app/(admin)/admin/news/write/actions";
-// ❌ 기존 import 제거: import NewsEditor from "@/components/editor/NewsEditor";
 import dynamicLoader from "next/dynamic";
 
-// ✅ 핵심 해결책 1: 에디터를 "서버에서 렌더링 금지" 시킴 (SSR: false)
+// ✅ 1. 에디터만 '서버 렌더링 끄기' (UI는 그대로 나옴)
 const NewsEditor = dynamicLoader(
   () => import("@/components/editor/NewsEditor"),
-  { ssr: false, loading: () => <div className="p-10 border text-gray-400">에디터 로딩중...</div> }
+  { 
+    ssr: false, 
+    loading: () => <div className="h-96 flex items-center justify-center border text-gray-400">에디터 로딩중...</div> 
+  }
 );
 
 export const dynamic = "force-dynamic";
@@ -22,13 +24,11 @@ const REPORTERS = [
   { name: "최유진 기자", email: "yujin_choi@indisnews.com" },
 ];
 
-// 알맹이 컴포넌트
 function WriteForm() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [loading, setLoading] = useState(!!id);
 
-  // 데이터 상태
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [category, setCategory] = useState("AI");
@@ -115,7 +115,6 @@ function WriteForm() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] font-sans p-6 flex justify-center">
       <div className="w-full max-w-[1600px] flex gap-6 items-start">
-        {/* 왼쪽: 기사 작성 카드 */}
         <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <form action={saveNews} className="p-8">
             <input type="hidden" name="id" value={id || ""} />
@@ -172,6 +171,7 @@ function WriteForm() {
               </div>
             </div>
 
+            {/* ✅ 원래 쓰시던 에디터 그대로 복구 */}
             <div className="border-t border-gray-100 pt-6">
               <NewsEditor value={content} onChange={setContent} onImageUpload={handleImageUploaded} />
             </div>
@@ -219,7 +219,7 @@ function WriteForm() {
   );
 }
 
-// ✅ 핵심 해결책 2: Suspense로 감싸서 배포 에러(prerendering) 원천 차단
+// ✅ 2. Suspense로 감싸서 배포 에러 방지 (껍데기)
 export default function WritePage() {
   return (
     <Suspense fallback={<div className="p-10 text-center font-bold">로딩중...</div>}>
