@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-// ❌ 에러 주범(useSearchParams) 삭제함
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation"; 
 import { saveNews, deleteImageAction, getNewsById } from "@/app/(admin)/admin/news/write/actions";
-import NewsEditor from "@/components/editor/NewsEditor";
+// ❌ 기존 import 제거: import NewsEditor from "@/components/editor/NewsEditor";
+import dynamicLoader from "next/dynamic";
 
-// 👇 서버 검사 패스시키는 치트키
+// ✅ 핵심 해결책 1: 에디터를 "서버에서 렌더링 금지" 시킴 (SSR: false)
+const NewsEditor = dynamicLoader(
+  () => import("@/components/editor/NewsEditor"),
+  { ssr: false, loading: () => <div className="p-10 border text-gray-400">에디터 로딩중...</div> }
+);
+
 export const dynamic = "force-dynamic";
 
 const REPORTERS = [
@@ -16,10 +22,11 @@ const REPORTERS = [
   { name: "최유진 기자", email: "yujin_choi@indisnews.com" },
 ];
 
-export default function WritePage() {
-  // 1. 기존 useSearchParams 대신 직접 URL을 읽는 변수
-  const [id, setId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+// 알맹이 컴포넌트
+function WriteForm() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const [loading, setLoading] = useState(!!id);
 
   // 데이터 상태
   const [title, setTitle] = useState("");
@@ -33,23 +40,8 @@ export default function WritePage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [selectedThumbnail, setSelectedThumbnail] = useState<string>("");
 
-  // ✅ 2. 화면이 켜지면(브라우저) 그때 주소를 확인합니다. (서버 에러 원천 차단)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const urlId = params.get("id");
-      setId(urlId);
-      
-      if (!urlId) {
-        setLoading(false); // ID가 없으면 그냥 새 글 작성 모드
-      }
-    }
-  }, []);
-
-  // ✅ 3. ID가 확인되면 데이터 불러오기
   useEffect(() => {
     if (!id) return;
-
     const loadData = async () => {
       try {
         const news = await getNewsById(Number(id));
@@ -71,11 +63,8 @@ export default function WritePage() {
           imgs.forEach((img) => { if (img.src) urls.push(img.src); });
           setGallery(Array.from(new Set(urls)));
         }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error(e); } 
+      finally { setLoading(false); }
     };
     loadData();
   }, [id]);
@@ -121,7 +110,7 @@ export default function WritePage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold text-gray-500">로딩중...</div>;
+  if (loading) return <div className="p-10 text-center font-bold text-gray-500">데이터 로딩중...</div>;
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] font-sans p-6 flex justify-center">
@@ -133,7 +122,6 @@ export default function WritePage() {
             <input type="hidden" name="content" value={content} />
             <input type="hidden" name="thumbnailUrl" value={selectedThumbnail} />
             
-            {/* 등급 */}
             <div className="border-b border-gray-100 pb-6 mb-8 flex items-center gap-6">
               <span className="text-sm font-bold text-gray-900 w-16">등급</span>
               <div className="flex gap-2">
@@ -148,7 +136,6 @@ export default function WritePage() {
               </div>
             </div>
 
-            {/* 입력 필드들 */}
             <div className="space-y-5 mb-8">
               <div className="flex items-center">
                 <label className="w-24 text-sm font-bold text-gray-800">섹션</label>
@@ -176,55 +163,26 @@ export default function WritePage() {
 
               <div className="flex items-center">
                 <label className="w-24 text-sm font-bold text-gray-800">제목</label>
-                <input 
-                  type="text" 
-                  name="title" 
-                  value={title} 
-                  onChange={(e)=>setTitle(e.target.value)} 
-                  onKeyDown={preventSubmitOnEnter}
-                  className="flex-1 p-2.5 border border-gray-300 rounded text-sm font-bold text-gray-900 outline-none focus:border-blue-500 placeholder-gray-300" 
-                  placeholder="기사 제목을 입력하세요" 
-                />
+                <input type="text" name="title" value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 p-2.5 border border-gray-300 rounded text-sm font-bold text-gray-900 outline-none focus:border-blue-500 placeholder-gray-300" placeholder="기사 제목을 입력하세요" />
               </div>
 
               <div className="flex items-start">
                 <label className="w-24 text-sm font-bold text-gray-800 pt-2.5">부제목</label>
-                <textarea 
-                  name="summary" 
-                  value={summary}
-                  onChange={(e)=>setSummary(e.target.value)}
-                  rows={3}
-                  className="flex-1 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 resize-none leading-relaxed" 
-                  placeholder="기사 요약문 (부제목)을 입력하세요."
-                />
+                <textarea name="summary" value={summary} onChange={(e)=>setSummary(e.target.value)} rows={3} className="flex-1 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 resize-none leading-relaxed" placeholder="기사 요약문 (부제목)을 입력하세요." />
               </div>
             </div>
 
-            {/* 에디터 */}
             <div className="border-t border-gray-100 pt-6">
               <NewsEditor value={content} onChange={setContent} onImageUpload={handleImageUploaded} />
             </div>
 
-            {/* 하단 */}
             <div className="mt-8 border-t border-gray-100 pt-6">
               <p className="text-xs text-gray-400 mb-6">Tip. 본문 내용이 없으면 포털에 반영이 안될 수 있습니다.</p>
-              
               <div className="flex items-center mb-8">
                 <label className="w-24 text-sm font-bold text-gray-800">키워드</label>
-                <input 
-                  type="text" 
-                  name="tags" 
-                  value={tags}
-                  onChange={(e)=>setTags(e.target.value)}
-                  onKeyDown={preventSubmitOnEnter}
-                  className="flex-1 p-3 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 text-blue-600"
-                  placeholder="#태그 입력 (쉼표로 구분)" 
-                />
+                <input type="text" name="tags" value={tags} onChange={(e)=>setTags(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 p-3 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 text-blue-600" placeholder="#태그 입력 (쉼표로 구분)" />
               </div>
-
-              <button type="submit" className="w-full bg-[#3b82f6] hover:bg-blue-600 text-white text-lg font-bold py-4 rounded-lg shadow-sm transition-transform active:scale-[0.99]">
-                저장하기
-              </button>
+              <button type="submit" className="w-full bg-[#3b82f6] hover:bg-blue-600 text-white text-lg font-bold py-4 rounded-lg shadow-sm transition-transform active:scale-[0.99]">저장하기</button>
             </div>
           </form>
         </div>
@@ -232,14 +190,9 @@ export default function WritePage() {
         {/* 오른쪽: 라이브러리 사이드바 */}
         <aside className="w-[320px] bg-white rounded-xl shadow-sm border border-gray-200 h-[85vh] sticky top-6 flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
-            <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              🖼️ 라이브러리
-            </span>
-            <span className="bg-white border border-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {gallery.length}
-            </span>
+            <span className="text-sm font-bold text-gray-800 flex items-center gap-2">🖼️ 라이브러리</span>
+            <span className="bg-white border border-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">{gallery.length}</span>
           </div>
-
           <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
             <div className="grid grid-cols-2 gap-2">
               {gallery.length === 0 ? (
@@ -249,34 +202,28 @@ export default function WritePage() {
                 </div>
               ) : (
                 gallery.map((url, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${selectedThumbnail === url ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100 hover:border-gray-300'}`} 
-                    onClick={()=>handleSetThumbnail(url)}
-                  >
+                  <div key={idx} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${selectedThumbnail === url ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100 hover:border-gray-300'}`} onClick={()=>handleSetThumbnail(url)}>
                     <img src={url} className="w-full h-full object-cover" />
-                    {selectedThumbnail === url && (
-                      <div className="absolute top-1 left-1 bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm z-10">
-                        대표
-                      </div>
-                    )}
+                    {selectedThumbnail === url && <div className="absolute top-1 left-1 bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm z-10">대표</div>}
                     <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <button type="button" onClick={(e)=>{e.stopPropagation(); handleDeleteImage(url);}} className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600 font-bold">
-                        삭제
-                      </button>
+                      <button type="button" onClick={(e)=>{e.stopPropagation(); handleDeleteImage(url);}} className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600 font-bold">삭제</button>
                     </div>
                   </div>
                 ))
               )}
             </div>
           </div>
-          <div className="p-4 border-t border-gray-100 text-center">
-             <div className="flex justify-center gap-2 opacity-30 grayscale">
-                <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-             </div>
-          </div>
         </aside>
       </div>
     </div>
+  );
+}
+
+// ✅ 핵심 해결책 2: Suspense로 감싸서 배포 에러(prerendering) 원천 차단
+export default function WritePage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center font-bold">로딩중...</div>}>
+      <WriteForm />
+    </Suspense>
   );
 }
