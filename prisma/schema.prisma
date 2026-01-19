@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model News {
+  id         Int      @id @default(autoincrement())
+  title      String
+  category   String
+  importance String   @default("normal")
+  summary    String   @db.Text
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  imageUrl   String?  
+  views     Int      @default(0)
+  reporterName  String?  @default("이정혁 기자") // 기본값 예시
+  reporterEmail String?  @default("indisnews1@gmail.com")
+  tags          String?  //  콤마로 구분해서 저장
+  newsViews  NewsView[]
+  comments Comment[]
+}
+
+model NewsView {
+  id        Int      @id @default(autoincrement())
+  viewedAt  DateTime @default(now()) // 언제 봤는지 시간 저장
+  newsId    Int
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+
+model Comment {
+  id        String   @id @default(cuid())
+  nickname  String   // ㅇㅇ (닉네임)
+  password  String   // 1234 (삭제/수정용 비밀번호)
+  content   String   // 댓글 내용
+  createdAt DateTime @default(now())
+  
+  newsId    Int
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+}
+
+
+model AppRanking {
+  id        Int      @id @default(autoincrement())
+  platform  String   // 'google' 또는 'apple'
+  rank      Int      // 1위, 2위...
+  title     String   // 앱 이름
+  publisher String   // 퍼블리셔(회사) 이름
+  iconUrl   String?  // 앱 아이콘 이미지
+  updatedAt DateTime @updatedAt
+  category  String?  //카테고리 칸 신설
+  link      String?  //앱 스토어 연결 링크
+}
