@@ -26,5 +26,6 @@ jobs:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          # 👇 파일 이름 꼭 확인하세요! (예: main.py)
+          # 👇 [중요] 파일 이름이 'crawler.py'가 맞는지 꼭 확인하세요!
+          # (crawler 폴더 안에 crawler.py 파일이 있어야 합니다)
           python crawler/crawler.py
