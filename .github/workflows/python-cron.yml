@@ -1,0 +1,31 @@
+name: 6시간마다 크롤러 실행
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 6시간마다 실행
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v3
+
+      - name: 파이썬 세팅하기
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 👇 [수정 1] crawler 폴더 안에 있는 패키지 목록 설치
+      - name: 라이브러리 설치
+        run: |
+          pip install -r crawler/requirements.txt
+
+      # 👇 [수정 2] crawler 폴더 안에 있는 파이썬 파일 실행
+      - name: 파이썬 코드 실행
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python crawler/crawler.py
