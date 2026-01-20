@@ -2,71 +2,104 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
 
+// 날짜 포맷 (로직 유지)
 const formatTime = (date: Date) => new Date(date).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
 
+// 카테고리별 텍스트 색상 (디자인 통일을 위해 텍스트 색상 로직 적용)
 const getCategoryColor = (category: string) => {
-  switch (category) {
-    case "AI": return "bg-blue-100";
-    case "Stock": return "bg-red-100";
-    case "Coin": return "bg-orange-100";
-    case "Game": return "bg-purple-100";
-    default: return "bg-slate-200";
-  }
+  const cat = category?.toLowerCase() || "";
+  if (["ai", "인공지능"].includes(cat)) return "text-blue-600";
+  if (["tech", "테크", "기기"].includes(cat)) return "text-indigo-600";
+  if (["stock", "주식"].includes(cat)) return "text-red-600";
+  if (["coin", "코인"].includes(cat)) return "text-orange-600";
+  if (["game", "게임"].includes(cat)) return "text-purple-600";
+  if (["business", "기업"].includes(cat)) return "text-emerald-600";
+  return "text-slate-600";
 };
 
 export default async function AllNewsPage() {
-  // 최신순 정렬
+  // 최신순 정렬 (로직 유지)
   const newsList = await prisma.news.findMany({ 
     orderBy: { createdAt: "desc" } 
   });
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="bg-white min-h-screen pb-20 font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
+      <div className="container mx-auto px-4 py-12 max-w-screen-xl">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             
-            {/* [왼쪽] 뉴스 리스트 */}
+            {/* [왼쪽] 뉴스 리스트 (3/4) */}
             <div className="lg:col-span-3">
-               <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm mb-8 text-center">
-                  <span className="text-slate-500 font-bold tracking-widest text-sm uppercase mb-2 block">TOTAL NEWS</span>
-                  <h1 className="text-4xl font-black text-slate-900">전체 최신 뉴스</h1>
-                  <p className="text-slate-500 mt-4 max-w-lg mx-auto">분야를 가리지 않는 모든 IT 소식을 최신순으로 확인하세요.</p>
+               
+               {/* 헤더 (디자인 통일) */}
+               <div className="flex items-end gap-3 mb-8 border-b-2 border-slate-900 pb-4">
+                    <h1 className="text-3xl font-black uppercase text-slate-900">
+                        All
+                    </h1>
+                    <span className="text-gray-400 text-sm font-medium pb-1">
+                    </span>
                </div>
 
-               <div className="space-y-6">
-                 {newsList.length > 0 ? newsList.map((item) => (
-                    // 👇 [핵심 수정] Link가 박스 전체를 감싸고, 카테고리가 없으면 'AI'로 처리해서 링크 깨짐 방지
-                    <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="block group">
-                      <article className="flex flex-col md:flex-row gap-6 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-6">
-                         {/* 썸네일 */}
-                         <div className={`w-full md:w-64 h-40 rounded-xl shrink-0 overflow-hidden ${getCategoryColor(item.category || 'AI')}`}>
-                            {item.imageUrl ? (
-                                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
-                            )}
-                         </div>
-                         
-                         {/* 내용 */}
-                         <div className="flex flex-col justify-center flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-slate-600 text-xs font-bold uppercase border border-slate-200 bg-slate-50 px-2 py-0.5 rounded">{item.category || "NEWS"}</span>
-                                <span className="text-slate-400 text-xs">• {formatTime(item.createdAt)}</span>
-                            </div>
-                            <h2 className="text-xl font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-600">{item.title}</h2>
-                            <p className="text-slate-500 text-sm line-clamp-2">{item.summary}</p>
-                         </div>
-                      </article>
-                    </Link>
-                 )) : (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 text-gray-400">아직 등록된 뉴스가 없습니다.</div>
-                 )}
-               </div>
+               {newsList.length > 0 ? (
+                 <div className="flex flex-col">
+                    {newsList.map((item) => (
+                        <Link 
+                            key={item.id} 
+                            href={`/news/${item.category || 'AI'}/${item.id}`} 
+                            className="group block py-8 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors -mx-4 px-4 rounded-xl"
+                        >
+                            <article className="flex flex-col md:flex-row gap-6 items-start">
+                                {/* [왼쪽] 썸네일 (240px 고정) */}
+                                <div className="w-full md:w-[240px] aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border border-gray-100 shadow-sm">
+                                    {item.imageUrl ? (
+                                        <img 
+                                            src={item.imageUrl} 
+                                            alt={item.title} 
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 text-xs font-medium">No Image</div>
+                                    )}
+                                </div>
+                                
+                                {/* [오른쪽] 텍스트 정보 */}
+                                <div className="flex-1 flex flex-col h-full min-w-0 py-1">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900 leading-snug mb-2 group-hover:text-blue-700 transition-colors break-keep">
+                                            {item.title}
+                                        </h2>
+                                        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3 break-keep">
+                                            {item.summary}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="flex items-center text-xs text-gray-400 font-medium mt-auto gap-2">
+                                        {/* 카테고리 */}
+                                        <span className={`${getCategoryColor(item.category || "")} font-bold uppercase`}>
+                                            {item.category || "NEWS"}
+                                        </span>
+                                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        {/* 날짜 */}
+                                        <span>{formatTime(item.createdAt)}</span>
+                                    </div>
+                                </div>
+                            </article>
+                        </Link>
+                    ))}
+                 </div>
+               ) : (
+                  <div className="text-center py-20 bg-gray-50 rounded-lg text-gray-400">
+                      아직 등록된 뉴스가 없습니다.
+                  </div>
+               )}
             </div>
 
-            {/* [오른쪽] 사이드바 (통합됨) */}
+            {/* [오른쪽] 사이드바 */}
             <aside className="lg:col-span-1">
-                <NewsSidebar />
+                <div className="sticky top-24">
+                    <NewsSidebar />
+                </div>
             </aside>
         </div>
       </div>

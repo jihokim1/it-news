@@ -2,8 +2,9 @@
 
 import { cookies } from "next/headers";
 
-// 박사님만의 비밀번호를 여기에 설정하세요!
-const SECRET_PASSWORD = "1234"; 
+// [수정] 이제 코드가 아니라 .env 파일에서 비밀번호를 몰래 가져옵니다.
+// 만약 .env에 없으면 임시로 "1234"를 씁니다.
+const SECRET_PASSWORD = process.env.ADMIN_PASSWORD || "1234"; 
 
 export async function setAdminSession(password: string) {
 // 1. 비밀번호가 맞는지 확인
@@ -26,7 +27,7 @@ return true; // 성공
 return false; // 실패
 }
 
-// 로그아웃 기능 (나중에 쓸 것)
+// 로그아웃 기능
 export async function deleteAdminSession() {
 const cookieStore = await cookies();
 cookieStore.delete("admin_session");

@@ -7,9 +7,9 @@ export default function Sidebar() {
 const pathname = usePathname();
 
 const menus = [
-{ name: "대시보드", href: "/admin", icon: "📊" },
-{ name: "뉴스 관리", href: "/admin/news", icon: "📰" },
-{ name: "랭킹 관리", href: "/admin/ranking", icon: "🏆" },
+{ name: "대시보드", href: "/admin" },
+{ name: "뉴스 관리", href: "/admin/news"},
+{ name: "랭킹 관리", href: "/admin/ranking"},
 ];
 
 return (
@@ -33,7 +33,6 @@ return (
                 : "text-slate-400 hover:text-white hover:bg-slate-800"   // 비활성 (회색)
             }`}
             >
-            <span>{menu.icon}</span>
             {menu.name}
             </Link>
         );
