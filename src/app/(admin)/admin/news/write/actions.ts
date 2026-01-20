@@ -118,3 +118,35 @@ await prisma.news.create({
 revalidatePath("/admin/news");
 redirect("/admin/news");
 }
+
+// 5. [추가] 모바일 뉴스 '더보기' 기능 (PC/모바일 공용 데이터 조회)
+export async function getMoreNews(category: string, page: number) {
+    const pageSize = 20; 
+    
+// 카테고리 디코딩
+const decodedCategory = decodeURIComponent(category);
+
+// ⭐ [핵심 수정] 카테고리가 'ALL'이면 조건 없이({}) 검색, 아니면 필터링
+const whereCondition = (category === "ALL") 
+    ? {} 
+    : {
+        category: {
+        contains: decodedCategory,
+        mode: 'insensitive' as const,
+        },
+    };
+
+try {
+    const news = await prisma.news.findMany({
+    where: whereCondition,
+    orderBy: { createdAt: "desc" },
+    take: pageSize,
+    skip: (page - 1) * pageSize,
+    });
+
+    return news;
+} catch (error) {
+    console.error("뉴스 더보기 로딩 실패:", error);
+    return [];
+}
+}

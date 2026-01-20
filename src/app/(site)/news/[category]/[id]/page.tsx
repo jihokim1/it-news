@@ -153,7 +153,7 @@ export default async function NewsDetailPage({ params }: Props) {
 
                     {/* 5. 저작권 푸터 */}
                     <div className="mt-12 text-xs text-gray-400 font-medium border-t border-gray-100 pt-6">
-                        저작권자 © 인디뉴스 무단전재 및 재배포, AI학습 및 활용 금지
+                        저작권자 © 트렌드IT 무단전재 및 재배포, AI학습 및 활용 금지
                     </div>
                 </div>
             </div>
