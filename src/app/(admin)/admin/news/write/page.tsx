@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { saveNews, deleteImageAction, getNewsById } from "@/app/(admin)/admin/news/write/actions";
 import dynamicLoader from "next/dynamic";
 
-// ✅ 1. 에디터만 '서버 렌더링 끄기' (UI는 그대로 나옴)
+// ✅ 에디터 로딩 최적화
 const NewsEditor = dynamicLoader(
 () => import("@/components/editor/NewsEditor"),
 { 
@@ -14,7 +14,8 @@ loading: () => <div className="h-96 flex items-center justify-center border text
 }
 );
 
-export const revalidate = 0;
+// ✅ 충돌나던 revalidate 삭제하고, 안전한 force-dynamic으로 복구
+export const dynamic = "force-dynamic";
 
 const REPORTERS = [
 { name: "IT뉴스", email: "webmaster@indinews.co.kr" },
@@ -171,7 +172,6 @@ return (
             </div>
         </div>
 
-        {/* ✅ 원래 쓰시던 에디터 그대로 복구 */}
         <div className="border-t border-gray-100 pt-6">
             <NewsEditor value={content} onChange={setContent} onImageUpload={handleImageUploaded} />
         </div>
@@ -187,7 +187,6 @@ return (
         </form>
     </div>
 
-    {/* 오른쪽: 라이브러리 사이드바 */}
     <aside className="w-[320px] bg-white rounded-xl shadow-sm border border-gray-200 h-[85vh] sticky top-6 flex flex-col">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
         <span className="text-sm font-bold text-gray-800 flex items-center gap-2">🖼️ 라이브러리</span>
@@ -219,7 +218,6 @@ return (
 );
 }
 
-// ✅ 2. Suspense로 감싸서 배포 에러 방지 (껍데기)
 export default function WritePage() {
 return (
 <Suspense fallback={<div className="p-10 text-center font-bold">로딩중...</div>}>
