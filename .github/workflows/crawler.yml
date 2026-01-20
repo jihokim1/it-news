@@ -1,35 +1,30 @@
-name: News Crawler
+name: 6시간마다 크롤러 실행
 
-# 1. 언제 실행할까?
 on:
-schedule:
-  - cron: '0 */6 * * *'  # 3시간마다 (UTC 기준)
-workflow_dispatch:       # GitHub 홈페이지에서 버튼 눌러서 수동 실행 가능
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
-crawl:
-  runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v3
 
-  steps:
-    - name: 코드 가져오기
-      uses: actions/checkout@v3
+      - name: 파이썬 세팅하기
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: 파이썬 설치
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: 라이브러리 설치
+        run: |
+          pip install -r crawler/requirements.txt
 
-    - name: 크롬 브라우저 설치
-      uses: browser-actions/setup-chrome@latest
-
-    - name: 라이브러리 설치
-      run: |
-        pip install -r requirements.txt
-
-    - name: 크롤러 실행
-      env:
-        # ⭐ 중요: 나중에 Vercel 배포 후 주소를 여기다 넣어야 합니다!
-        # 일단은 임시로 비워두거나 localhost로 두세요.
-        API_URL: ${{ secrets.API_URL }} 
-      run: |
-        python crawler/crawler.py
+      - name: 파이썬 코드 실행
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # 👇 파일 이름 꼭 확인하세요! (예: main.py)
+          python crawler/crawler.py
