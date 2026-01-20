@@ -2,7 +2,7 @@ name: 6시간마다 크롤러 실행
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # 6시간마다 실행
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -17,15 +17,14 @@ jobs:
         with:
           python-version: '3.9'
 
-      # 👇 [수정 1] crawler 폴더 안에 있는 패키지 목록 설치
       - name: 라이브러리 설치
         run: |
           pip install -r crawler/requirements.txt
 
-      # 👇 [수정 2] crawler 폴더 안에 있는 파이썬 파일 실행
       - name: 파이썬 코드 실행
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
+          # 👇 'main.py' 부분을 박사님의 진짜 파일 이름으로 꼭 바꾸세요!
           python crawler/crawler.py
