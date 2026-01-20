@@ -1,19 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
-import { ChevronRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
-// 메인에 보여줄 카테고리 순서
+// 카테고리 설정
 const DISPLAY_CATEGORIES = [
-  { id: "AI", label: "인공지능 (AI)" },
-  { id: "Tech", label: "테크 / 기기" },
-  { id: "Business", label: "IT 기업" },
-  { id: "Game", label: "게임" },
-  { id: "Stock", label: "주식" },
-  { id: "Coin", label: "코인" },
+  { id: "AI", label: "Artificial Intelligence" },
+  { id: "Tech", label: "Technology" },
+  { id: "Business", label: "Business" },
+  { id: "Game", label: "Gaming" },
+  { id: "Stock", label: "Market" },
+  { id: "Coin", label: "Crypto" },
 ];
 
-// 카테고리별 포인트 색상
+// 미니멀한 색상 포인트 (텍스트 색상만 변경)
 const getCategoryColor = (category: string) => {
     const cat = category?.toLowerCase() || "";
     switch (cat) {
@@ -21,11 +21,9 @@ const getCategoryColor = (category: string) => {
       case "tech": return "text-indigo-600";
       case "stock": return "text-red-600";
       case "coin": return "text-orange-600";
-      case "game": return "text-purple-600";
-      case "business": return "text-emerald-600";
-      default: return "text-slate-600";
+      default: return "text-slate-900";
     }
-  };
+};
 
 export default async function HomePage() {
   const allNews = await prisma.news.findMany({
@@ -33,151 +31,150 @@ export default async function HomePage() {
   });
 
   const heroNews = allNews.filter((n) => n.importance === "high");
-  
+  const mainHero = heroNews[0];
+  const subHeroes = heroNews.slice(1, 4);
+
+  // 나머지 뉴스 중 최신 5개 (Newstapa 스타일 리스트용)
+  const recentNews = allNews.filter(n => n.id !== mainHero?.id).slice(0, 5);
+
   const getCategoryNews = (catId: string) => 
     allNews.filter((n) => 
       (n.category?.toLowerCase() === catId.toLowerCase()) && n.importance !== "high"
-    );
-
-  const mainHero = heroNews[0];
-  const sideHeroes = heroNews.slice(1, 4);
+    ).slice(0, 4); // 4개만 가져오기
 
   return (
-    <div className="bg-white min-h-screen pb-20 font-sans text-slate-900">
-      <div className="container mx-auto px-4 py-12 max-w-screen-xl">
+    // 배경: 완전한 화이트 (종이 질감)
+    <div className="bg-white min-h-screen font-sans text-black selection:bg-black selection:text-white">
+      
+      <div className="container mx-auto px-4 max-w-screen-xl border-x border-gray-100 min-h-screen">
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-            
-            {/* [왼쪽] 메인 콘텐츠 영역 (3/4) */}
-            <div className="lg:col-span-3">
-            
-                {/* 1. 🔥 상단 헤드라인 (카테고리/날짜 제거됨) */}
-                <section className="mb-20">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
-                    </div>
-                    
-                    {heroNews.length === 0 ? (
-                        <div className="text-gray-400 py-32 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                            중요 뉴스가 없습니다.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                            {/* 메인 기사 */}
-                            {mainHero && (
-                                <div className="lg:col-span-7">
-                                    <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="group block">
-                                        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100 mb-5">
-                                            {mainHero.imageUrl ? (
-                                                <img src={mainHero.imageUrl} alt={mainHero.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-300">No Image</div>
-                                            )}
-                                        </div>
-                                        {/* 👇 [수정] 카테고리 태그 제거하고 제목만 남김 */}
-                                        <h3 className="text-3xl font-black leading-tight group-hover:text-blue-700 transition-colors mt-2">
-                                            {mainHero.title}
-                                        </h3>
-                                    </Link>
-                                </div>
-                            )}
-                            {/* 서브 기사 리스트 */}
-                            <div className="lg:col-span-5 flex flex-col gap-6">
-                                {sideHeroes.map((item) => (
-                                    <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group flex gap-4 items-start pb-6 border-b border-gray-100 last:border-0 last:pb-0">
-                                        <div className="flex-1">
-                                            <h4 className="text-lg font-bold leading-snug group-hover:text-blue-700 line-clamp-3 mb-1">
-                                                {item.title}
-                                            </h4>
-                                        </div>
-                                        <div className="w-24 aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                                            {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />}
-                                        </div>
-                                    </Link>
-                                ))}
+        {/* [섹션 1] 초대형 헤드라인 (잡지 표지 스타일) */}
+        <section className="py-12 md:py-16 border-b border-black">
+            {mainHero ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                    {/* 텍스트 영역 (왼쪽) */}
+                    <div className="lg:col-span-5 flex flex-col justify-center order-2 lg:order-1">
+                        <span className={`font-bold tracking-wider text-sm mb-4 uppercase ${getCategoryColor(mainHero.category || '')}`}>
+                            {mainHero.category || 'COVER STORY'}
+                        </span>
+                        <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="group">
+                            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-6 group-hover:underline decoration-4 underline-offset-4 decoration-blue-600 transition-all">
+                                {mainHero.title}
+                            </h1>
+                            <p className="text-lg text-gray-500 leading-relaxed font-medium line-clamp-3 mb-6">
+                                {mainHero.summary}
+                            </p>
+                            <div className="flex items-center text-sm font-bold text-black border-b border-black w-fit pb-1 group-hover:text-blue-600 group-hover:border-blue-600 transition-colors">
+                                READ ARTICLE <ArrowUpRight className="ml-1 w-4 h-4" />
                             </div>
+                        </Link>
+                    </div>
+
+                    {/* 이미지 영역 (오른쪽) */}
+                    <div className="lg:col-span-7 order-1 lg:order-2">
+                        <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block relative aspect-[4/3] overflow-hidden bg-gray-100">
+                             {mainHero.imageUrl && (
+                                <img src={mainHero.imageUrl} alt={mainHero.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 grayscale hover:grayscale-0" />
+                             )}
+                             {/* 이미지 위에 날짜/작성자 오버레이 없음 (미니멀) */}
+                        </Link>
+                    </div>
+                </div>
+            ) : (
+                <div className="py-20 text-center font-black text-6xl text-gray-100 uppercase tracking-tighter">
+                    No Headline
+                </div>
+            )}
+        </section>
+
+        {/* [섹션 2] 3칼럼 그리드 (서브 헤드라인 + 최신 뉴스) */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 border-b border-gray-200">
+            
+            {/* 왼쪽: 서브 헤드라인 (이미지 강조) */}
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 lg:border-r border-gray-200">
+                {subHeroes.map((item, idx) => (
+                    <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className={`group block p-6 md:p-10 border-b border-gray-200 ${idx % 2 === 0 ? 'md:border-r' : ''}`}>
+                        <div className="aspect-video bg-gray-100 mb-6 overflow-hidden">
+                            {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
                         </div>
-                    )}
-                </section>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">{item.category || 'NEWS'}</span>
+                        <h3 className="text-xl md:text-2xl font-bold leading-tight group-hover:text-blue-600 transition-colors">
+                            {item.title}
+                        </h3>
+                    </Link>
+                ))}
+            </div>
 
-                {/* 2. ⚡️ 카테고리 섹션 (2열 그리드) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+            {/* 오른쪽: 텍스트 리스트 (LATEST) */}
+            <div className="lg:col-span-4 p-6 md:p-10 bg-gray-50/50">
+                <div className="flex items-center justify-between mb-8">
+                    <h4 className="font-black text-sm uppercase tracking-widest text-gray-400">Latest Updates</h4>
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                </div>
+                <div className="space-y-8">
+                    {recentNews.map((item) => (
+                        <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group block">
+                            <h5 className="text-lg font-bold leading-snug mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                {item.title}
+                            </h5>
+                            <span className="text-xs text-gray-400 font-mono">
+                                {new Date(item.createdAt).toLocaleDateString()}
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        {/* [섹션 3] 카테고리별 뉴스 (Bento Grid 스타일) */}
+        <section className="py-16">
+             <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-12 gap-y-16">
+                
+                {/* 메인 콘텐츠 영역 (3/4) */}
+                <div className="lg:col-span-3 space-y-20">
                     {DISPLAY_CATEGORIES.map((cat) => {
-                        const catNews = getCategoryNews(cat.id);
-                        if (catNews.length === 0) return null;
-
-                        const visualNews = catNews[0];
-                        const listNews = catNews.slice(1, 11); 
+                        const news = getCategoryNews(cat.id);
+                        if (news.length === 0) return null;
 
                         return (
-                            <section key={cat.id} className="flex flex-col">
-                                {/* 카테고리 헤더 */}
-                                <div className="flex items-center justify-between mb-6 pb-2 border-b-2 border-gray-900">
-                                    <h3 className={`text-xl font-black ${getCategoryColor(cat.id)}`}>
-                                        {cat.label}
-                                    </h3>
-                                    <Link href={`/news/${cat.id}`} className="text-xs font-bold text-gray-400 hover:text-gray-900 flex items-center">
-                                        더보기 <ChevronRight size={12} />
+                            <div key={cat.id} className="border-t-4 border-black pt-6">
+                                <div className="flex justify-between items-end mb-8">
+                                    <h2 className="text-3xl font-black uppercase tracking-tighter">{cat.label}</h2>
+                                    <Link href={`/news/${cat.id}`} className="text-sm font-bold border-b border-gray-300 hover:border-black transition-colors pb-1">
+                                        VIEW ALL
                                     </Link>
                                 </div>
-
-                                {/* [상단] 대표 이미지 기사 1개 (제목만 표시) */}
-                                {visualNews && (
-                                    <div className="mb-6 group">
-                                        <Link href={`/news/${visualNews.category || cat.id}/${visualNews.id}`}>
-                                            <div className="aspect-[16/9] rounded-xl overflow-hidden bg-gray-100 mb-3 relative">
-                                                {visualNews.imageUrl ? (
-                                                    <img 
-                                                        src={visualNews.imageUrl} 
-                                                        alt={visualNews.title} 
-                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">No Image</div>
-                                                )}
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                                    {news.map((item) => (
+                                        <Link key={item.id} href={`/news/${item.category || cat.id}/${item.id}`} className="group flex gap-4 items-start">
+                                            <div className="w-24 h-24 bg-gray-100 shrink-0 overflow-hidden">
+                                                 {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />}
                                             </div>
-                                            <h4 className="text-xl font-bold leading-snug text-slate-900 group-hover:text-blue-700 transition-colors line-clamp-2 mb-2">
-                                                {visualNews.title}
-                                            </h4>
-                                            <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
-                                                {visualNews.summary}
-                                            </p>
+                                            <div>
+                                                <h3 className="text-lg font-bold leading-snug group-hover:underline decoration-2 underline-offset-4 line-clamp-3">
+                                                    {item.title}
+                                                </h3>
+                                            </div>
                                         </Link>
-                                    </div>
-                                )}
-
-                                {/* [하단] 텍스트 리스트 (제목만 표시) */}
-                                <ul className="flex flex-col gap-3">
-                                    {listNews.map((item) => (
-                                        <li key={item.id}>
-                                            <Link 
-                                                href={`/news/${item.category || cat.id}/${item.id}`}
-                                                className="group block"
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <span className="text-[15px] font-medium text-slate-700 leading-snug group-hover:text-blue-700 line-clamp-1 transition-colors">
-                                                        <span className="text-gray-300 mr-2">·</span>
-                                                        {item.title}
-                                                    </span>
-                                                </div>
-                                            </Link>
-                                        </li>
                                     ))}
-                                </ul>
-                            </section>
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
-            </div>
 
-            {/* [오른쪽] 사이드바 (Sticky) */}
-            <aside className="lg:col-span-1">
-                 <div className="sticky top-12">
-                    <NewsSidebar />
-                 </div>
-            </aside>
+                {/* 사이드바 (1/4) - Sticky 적용 */}
+                <aside className="lg:col-span-1 h-fit sticky top-10 border-l border-gray-100 pl-8 hidden lg:block">
+                     <div className="mb-8">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4">Trending Now</span>
+                        <NewsSidebar />
+                     </div>
+                </aside>
 
-        </div>
+             </div>
+        </section>
+
       </div>
     </div>
   );
