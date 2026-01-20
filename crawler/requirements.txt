@@ -3,3 +3,4 @@ requests
 beautifulsoup4
 bs4
 selenium
+webdriver_manager
