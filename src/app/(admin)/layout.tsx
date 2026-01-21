@@ -16,7 +16,7 @@ return (
     <header className="flex justify-between items-center mb-8">
         <h2 className="font-bold text-gray-500">관리자 모드</h2>
         <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-slate-600">박사님 (Super Admin)</span>
+            <span className="text-sm font-bold text-slate-600">Admin</span>
             <div className="w-10 h-10 rounded-full bg-slate-200"></div>
         </div>
     </header>
