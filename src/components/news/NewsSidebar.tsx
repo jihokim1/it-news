@@ -61,7 +61,7 @@ export async function NewsSidebar() {
       {/* 3. 📢 배너 광고 */}
       <div className="bg-slate-900 rounded-2xl p-6 text-center text-white">
         <p className="text-xs font-bold text-gray-400 mb-2">ADVERTISEMENT</p>
-        <h4 className="font-bold text-lg mb-4">내 앱 홍보를 하고싶다면?</h4>
+        <h4 className="font-bold text-lg mb-4">내 앱 홍보 하고싶다면?</h4>
         <button className="bg-blue-600 text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors">
           광고 문의하기
         </button>

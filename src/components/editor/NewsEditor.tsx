@@ -25,7 +25,7 @@ const ReactQuill = dynamic(async () => {
       const caption = document.createElement("div");
       caption.setAttribute("class", "news-caption");
       caption.setAttribute("contenteditable", "true"); 
-      caption.innerText = "사진 출처를 입력하세요";
+      caption.innerText = "";
       
       // 이벤트 전파 차단
       caption.addEventListener("keydown", (e: Event) => { e.stopPropagation(); });

@@ -16,7 +16,6 @@ return (
     
     {/* 푸터 */}
     <footer className="border-t py-6 text-center text-sm text-slate-500">
-    © 2026 IT News. All rights reserved.
     </footer>
 </div>
 );

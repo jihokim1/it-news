@@ -72,7 +72,6 @@ export default async function RankingPage({ searchParams }: Props) {
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
                         LIVE
                     </span>
-                    <span className="text-xs text-gray-400 mt-1">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} 기준</span>
                 </div>
             </div>
 
