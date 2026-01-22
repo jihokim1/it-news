@@ -18,7 +18,7 @@ model News {
   updatedAt  DateTime @updatedAt
   imageUrl   String?  
   views     Int      @default(0)
-  reporterName  String?  @default("이정혁 기자") // 기본값 예시
+  reporterName  String?  
   reporterEmail String?  @default("indisnews1@gmail.com")
   tags          String?  //  콤마로 구분해서 저장
   newsViews  NewsView[]
