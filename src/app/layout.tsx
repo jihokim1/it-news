@@ -77,6 +77,7 @@ export default function RootLayout({
 
         {/* 푸터 추가 */}
         <Footer />
+
       </body>
     </html>
   );
