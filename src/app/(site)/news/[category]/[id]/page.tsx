@@ -96,7 +96,7 @@ export default async function NewsDetailPage({ params }: Props) {
                 </header>
 
                 <article className="px-8 py-8">
-                    <div className="view-content text-gray-800 leading-8 text-lg" dangerouslySetInnerHTML={{ __html: safeContent }} />
+                <div className="view-content max-w-3xl mx-auto text-gray-800 leading-8 text-lg" dangerouslySetInnerHTML={{ __html: safeContent }} />
                 </article>
 
                 <div className="px-8 mt-8 pb-10">
