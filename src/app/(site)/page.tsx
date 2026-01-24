@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
 
+/* DB read바로 적용시키는 코드 */
+export const dynamic = "force-dynamic";
+
 // 1. 상단 와이드 카테고리 (AI, IT)
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
