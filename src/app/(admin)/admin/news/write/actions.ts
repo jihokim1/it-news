@@ -89,7 +89,7 @@ const finalImageUrl = thumbnailUrl || null;
 const dataToSave = {
 title,
 category,
-importance,
+importance, 
 summary,
 content,
 imageUrl: finalImageUrl,
@@ -113,6 +113,16 @@ await prisma.news.create({
     views: 0,
     },
 });
+// 메인 페이지 캐시를 즉시 무효화하여 새로운 기사가 보이게 합니다.
+revalidatePath("/"); 
+// 해당 카테고리 목록 페이지도 갱신합니다.
+revalidatePath(`/news/${category}`);
+// 관리자 목록 페이지를 갱신합니다.
+revalidatePath("/admin/news");
+
+// 페이지 이동
+redirect("/admin/news");
+
 }
 
 revalidatePath("/admin/news");

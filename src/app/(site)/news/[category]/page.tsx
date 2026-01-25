@@ -19,7 +19,6 @@ const CATEGORY_MAP: Record<string, string> = {
   business: "비즈니스", // business -> 비즈니스
   stock: "주식",       // stock -> 주식
   coin: "코인",        // coin -> 코인
-  game: "게임",        // game -> 게임
   it: "IT",            // it -> IT
 };
 
