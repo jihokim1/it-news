@@ -51,7 +51,7 @@ content: (
             <li><span className="inline-block w-20 opacity-70">주소</span> 서울특별시 강남구 테헤란로 000, 트렌드타워 10층</li>
             <li><span className="inline-block w-20 opacity-70">등록번호</span> 서울 아 00000</li>
             <li><span className="inline-block w-20 opacity-70">발행/편집인</span> 김지호</li>
-            <li><span className="inline-block w-20 opacity-70">대표전화</span> 02-0000-0000</li>
+            <li><span className="inline-block w-20 opacity-70">대표전화</span> 070-8058-9573</li>
         </ul>
     </section>
     </div>
@@ -96,8 +96,8 @@ content: (
         담당자가 확인 후 1 영업일 이내에 회신 드립니다.
         </p>
         <div className="pt-2">
-        <a href="mailto:ad@trendit.com" className="inline-block bg-slate-900 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-600 transition-colors">
-            ad@trendit.com 메일 보내기
+        <a href="mailto:trendit_news@naver.com" className="inline-block bg-slate-900 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-600 transition-colors">
+        trendit_news@naver.com 메일 보내기
         </a>
         </div>
     </div>
@@ -180,7 +180,7 @@ title: "개인정보처리방침",
 content: (
     <div className="text-sm text-slate-600 space-y-8 leading-relaxed text-justify">
         <p className="font-medium text-slate-900 p-4 bg-slate-50 rounded">
-        <strong>트렌드IT</strong>('www.trendit.com'이하 '회사')는 개인정보보호법에 따라 이용자의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 이용자의 고충을 원활하게 처리할 수 있도록 다음과 같은 처리방침을 두고 있습니다.
+        <strong>트렌드IT</strong>('www.trendit.ai.kr'이하 '회사')는 개인정보보호법에 따라 이용자의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 이용자의 고충을 원활하게 처리할 수 있도록 다음과 같은 처리방침을 두고 있습니다.
     </p>
 
     <section>
@@ -222,8 +222,8 @@ content: (
                 <tbody>
                     <tr><th className="w-32 py-1">성명</th><td>김지호</td></tr>
                     <tr><th className="w-32 py-1">직책</th><td>대표 / 개인정보관리책임자</td></tr>
-                    <tr><th className="w-32 py-1">연락처</th><td>02-0000-0000</td></tr>
-                    <tr><th className="w-32 py-1">이메일</th><td>privacy@trendit.com</td></tr>
+                    <tr><th className="w-32 py-1">연락처</th><td>070-8058-95730</td></tr>
+                    <tr><th className="w-32 py-1">이메일</th><td>trendit_news@naver.com</td></tr>
                 </tbody>
             </table>
         </div>
@@ -258,8 +258,8 @@ content: (
                     <strong className="block text-slate-900 mb-1">[청소년보호 책임자]</strong>
                     <p>성명 : 김지호</p>
                     <p>소속 : 트렌드IT 편집국</p>
-                    <p>전화 : 02-0000-0000</p>
-                    <p>이메일 : youth@trendit.com</p>
+                    <p>전화 : 070-8058-9573</p>
+                    <p>이메일 : trendit_news@naver.com</p>
                 </div>
             </div>
         </div>

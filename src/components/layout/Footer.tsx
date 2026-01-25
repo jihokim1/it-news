@@ -38,9 +38,10 @@ return (
               <span className="font-bold text-gray-300">청소년보호책임자:</span> 황선희
           </p>
           <p>
+            <span className="font-bold text-gray-300">발행일:</span> 2026.01.01 <span className="mx-2 text-gray-700">|</span>
+            <span className="font-bold text-gray-300">전화:</span> 070-8058-9573
               {/* <span className="font-bold text-gray-300">등록번호:</span> 서울 아 00000 <span className="mx-2 text-gray-700">|</span>
-              <span className="font-bold text-gray-300">발행일:</span> 2026.01.01 <span className="mx-2 text-gray-700">|</span>
-              <span className="font-bold text-gray-300">전화:</span> 02-0000-0000 */}
+            <span className="font-bold text-gray-300">전화:</span> 070-8058-9573 */}
           </p>
           <p>
               <span className="font-bold text-gray-300">주소:</span> 서울특별시 용산구 새창로 124-9

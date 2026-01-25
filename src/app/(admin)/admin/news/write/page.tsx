@@ -18,11 +18,11 @@ loading: () => <div className="h-96 flex items-center justify-center border text
 export const dynamic = "force-dynamic";
 
 const REPORTERS = [
-{ name: "IT뉴스", email: "webmaster@indinews.co.kr" },
-{ name: "이정수 기자", email: "indisnews1@gmail.com" },
-{ name: "김지영 기자", email: "ji_young@indisnews.com" },
-{ name: "박민수 기자", email: "min_park@indisnews.com" },
-{ name: "최유진 기자", email: "yujin_choi@indisnews.com" },
+{ name: "김형식 기", email: "trendit_news@naver.com" },
+{ name: "이정수 기자", email: "trendit_news@naver.com" },
+{ name: "김지영 기자", email: "trendit_news@naver.com" },
+{ name: "박민수 기자", email: "trendit_news@naver.com" },
+{ name: "최유진 기자", email: "trendit_news@naver.com" },
 ];
 
 function WriteForm() {
