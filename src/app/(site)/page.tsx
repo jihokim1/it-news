@@ -4,6 +4,8 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 
 /* DB read 바로 적용시키는 코드 */
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 // 1. [수정됨] Business -> IT로 변경 (이제 IT 기사가 정상적으로 나옵니다)
 const TOP_WIDE_CATEGORIES = [
