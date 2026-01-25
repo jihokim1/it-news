@@ -2,13 +2,13 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
 
-/* DB read바로 적용시키는 코드 */
+/* DB read 바로 적용시키는 코드 */
 export const dynamic = "force-dynamic";
 
-// 1. 상단 와이드 카테고리 (AI, IT)
+// 1. [수정됨] Business -> IT로 변경 (이제 IT 기사가 정상적으로 나옵니다)
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
-  { id: "Business", label: "IT" },
+  { id: "IT", label: "IT" }, 
 ];
 
 // 2. 중간 2단 분할 카테고리 (주식, 코인)
@@ -39,7 +39,9 @@ export default async function HomePage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const heroNews = allNews.filter((n) => n.importance === "high").slice(0, 5);
+  // [수정됨] 중요도(importance)가 대문자 High든 소문자 high든 다 찾아내도록 변경
+  const heroNews = allNews.filter((n) => n.importance && n.importance.toLowerCase() === "high").slice(0, 5);
+  
   const mainHero = heroNews[0]; 
   const subHeroes = heroNews.slice(1, 5); 
 
@@ -143,7 +145,9 @@ export default async function HomePage() {
                 <div className="space-y-10">
                     {TOP_WIDE_CATEGORIES.map((cat) => {
                         const news = getCategoryNews(cat.id, 4);
+                        // 기사가 없어도 섹션은 보이게 하려면 아래 if문을 지우세요.
                         if (news.length === 0) return null;
+                        
                         const mainCatNews = news[0];
                         const subCatNews = news.slice(1, 4);
                         const titleColor = getCategoryColor(cat.id);
@@ -186,12 +190,10 @@ export default async function HomePage() {
 
                         return (
                             <div key={cat.id}>
-                                {/* 👇 여기 border-b-2 등 삭제됨 */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
                                     <Link href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</Link>
                                 </div>
-                                {/* 상단 대형 기사 */}
                                 <div className="mb-6">
                                     <Link href={`/news/${main.category || cat.id}/${main.id}`} className="group block">
                                         <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
@@ -201,7 +203,6 @@ export default async function HomePage() {
                                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{main.summary}</p>
                                     </Link>
                                 </div>
-                                {/* 하단 리스트 */}
                                 <div className="flex flex-col gap-4">
                                     {subs.map((item) => (
                                         <ListItem key={item.id} item={item} />
@@ -255,7 +256,6 @@ export default async function HomePage() {
                     <NewsSidebar />
                 </div>
             </aside>
-
         </div>
       </div>
     </div>
