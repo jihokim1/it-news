@@ -5,31 +5,47 @@ import { useMemo, useRef, useEffect } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { uploadImageAction } from "@/app/(admin)/admin/news/write/actions";
 
-// 👇 [핵심] 서버 에러 방지용 dynamic import + Blot 정의
+// 👇 [핵심 수정 1] ReactQuill 로딩 방식 및 커스텀 Blot 재설계
 const ReactQuill = dynamic(async () => {
   const { default: RQ, Quill } = await import("react-quill-new");
 
   const BlockEmbed = Quill.import("blots/block/embed") as any;
 
-  // 🖼️ 이미지+캡션 커스텀 블록 (삭제 잠금 기능 포함)
   class ImageCaptionBlot extends BlockEmbed {
     static create(value: string) {
       const node = super.create();
-      node.setAttribute("contenteditable", "false"); // 박스 잠금
+      // ⭐ 핵심: contenteditable="false"를 굳이 명시하지 않음 (Quill이 알아서 함)
       node.setAttribute("class", "news-image-container");
 
       const img = document.createElement("img");
       img.setAttribute("src", value);
       img.setAttribute("alt", "news-image");
       
-      const caption = document.createElement("div");
+      const caption = document.createElement("input"); // ⭐ div 대신 input 사용 (가장 확실함)
       caption.setAttribute("class", "news-caption");
-      caption.setAttribute("contenteditable", "true"); 
-      caption.innerText = "";
+      caption.setAttribute("placeholder", "▲ 사진 설명을 입력하세요 (출처 등)");
+      caption.setAttribute("type", "text");
       
-      // 이벤트 전파 차단
-      caption.addEventListener("keydown", (e: Event) => { e.stopPropagation(); });
-      caption.addEventListener("click", (e: Event) => { e.stopPropagation(); });
+      // ⭐ 핵심: 이벤트 버블링을 아주 강력하게 차단
+      // Quill이 "어? 여기서 키보드 눌렀네? 내가 처리해야지" 하는 걸 원천 봉쇄
+      const stopEvent = (e: Event) => { e.stopPropagation(); };
+      
+      caption.addEventListener("mousedown", stopEvent);
+      caption.addEventListener("click", stopEvent);
+      caption.addEventListener("keydown", (e: KeyboardEvent) => {
+          e.stopPropagation(); 
+          // 엔터 키 눌렀을 때 줄바꿈 방지하고 그냥 입력 유지
+          if(e.key === 'Enter') e.preventDefault();
+      });
+      // 붙여넣기 허용
+      caption.addEventListener("paste", stopEvent); 
+      caption.addEventListener("copy", stopEvent);
+      caption.addEventListener("cut", stopEvent);
+
+      // 입력값 저장 (HTML로 변환될 때 value 속성에 박히도록)
+      caption.addEventListener("input", (e: any) => {
+          caption.setAttribute("value", e.target.value);
+      });
 
       node.appendChild(img);
       node.appendChild(caption);
@@ -38,7 +54,14 @@ const ReactQuill = dynamic(async () => {
 
     static value(node: HTMLElement) {
       const img = node.querySelector("img");
-      return img ? img.getAttribute("src") : null;
+      const caption = node.querySelector(".news-caption") as HTMLInputElement;
+      
+      // 데이터를 저장할 때는 JSON 객체로 저장하는 게 좋지만, 
+      // 현재 구조상 이미지 URL만 리턴하고 캡션 내용은 HTML 자체에 박혀있게 둠
+      return {
+          url: img ? img.getAttribute("src") : null,
+          caption: caption ? caption.value : ""
+      };
     }
   }
 
@@ -46,10 +69,8 @@ const ReactQuill = dynamic(async () => {
   ImageCaptionBlot.tagName = "div";           
   Quill.register(ImageCaptionBlot);
 
-  // ref 전달 해결
   return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />;
 }, { ssr: false });
-
 
 interface EditorProps {
   value: string;
@@ -59,38 +80,6 @@ interface EditorProps {
 
 export default function NewsEditor({ value, onChange, onImageUpload }: EditorProps) {
   const quillRef = useRef<any>(null);
-
-  // 👇 [삭제 방지 로직]
-  useEffect(() => {
-    const timer = setTimeout(() => {
-        const quill = quillRef.current?.getEditor();
-        if (!quill) return;
-
-        quill.root.addEventListener('keydown', (event: KeyboardEvent) => {
-            if (event.key === 'Backspace' || event.key === 'Delete') {
-                const selection = document.getSelection();
-                if (!selection || selection.rangeCount === 0) return;
-
-                const anchorNode = selection.anchorNode;
-                const isInsideCaption = (anchorNode as HTMLElement)?.closest?.('.news-caption') || 
-                                        anchorNode?.parentElement?.closest?.('.news-caption');
-
-                if (!isInsideCaption) {
-                    const range = quill.getSelection();
-                    if (range) {
-                        const [blot] = quill.getLeaf(range.index);
-                        const blotName = blot?.parent?.statics?.blotName || blot?.statics?.blotName;
-                        if (blotName === "imageCaption") {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                    }
-                }
-            }
-        });
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   const imageHandler = () => {
     const input = document.createElement("input");
@@ -114,8 +103,10 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
         const range = quill.getSelection(true);
         const index = range ? range.index : quill.getLength();
 
-        quill.insertEmbed(index, "imageCaption", publicUrl, "user");
-        setTimeout(() => { quill.setSelection(index + 1, 0, "user"); }, 50);
+        // 커서 위치에 이미지 삽입
+        quill.insertEmbed(index, "imageCaption", publicUrl);
+        // 이미지 바로 뒤로 커서 이동
+        setTimeout(() => { quill.setSelection(index + 1); }, 50);
       } catch (e) {
         console.error(e);
         alert("업로드 실패");
@@ -137,64 +128,44 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
 
   return (
     <div className="mb-12 bg-white flex flex-col h-full">
-      {/* 👇 [핵심] 실제 뉴스 기사 뷰와 똑같이 만드는 CSS */}
       <style jsx global>{`
-        /* 툴바 스타일 */
+        /* ... (기존 스타일 유지) ... */
         .ql-container.ql-snow { border: none !important; }
         .ql-toolbar.ql-snow { 
             border: none !important; 
             border-bottom: 1px solid #e5e7eb !important;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: white;
+            position: sticky; top: 0; z-index: 10; background: white;
         }
+        .ql-container { height: auto !important; overflow: visible !important; flex-grow: 1; }
         
-        /* 에디터 내부 스크롤 허용 */
-        .ql-container { 
-            height: auto !important; 
-            overflow: visible !important;
-            flex-grow: 1;
-        }
-        
-        /* 🔥 [여기가 진짜입니다] 실제 기사처럼 보이는 본문 스타일 */
         .ql-editor {
             min-height: 800px;
             overflow: visible !important;
-            padding: 40px 20px !important; /* 위아래 40, 좌우 20 (모바일 대응) */
-            
-            /* 실제 기사처럼 가운데 정렬 & 폭 제한 */
+            padding: 40px 20px !important;
             max-width: 720px; 
             margin: 0 auto; 
-            
-            /* 폰트 & 가독성 */
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
             font-size: 17px;
             line-height: 1.8;
-            color: #374151; /* 진한 회색 (눈 편안함) */
-            letter-spacing: -0.02em;
+            color: #374151;
         }
 
-        /* 제목이나 헤더 스타일 */
+        /* 제목 스타일 */
         .ql-editor h1, .ql-editor h2, .ql-editor h3 {
-            font-weight: 800;
-            margin-top: 2em;
-            margin-bottom: 0.5em;
-            color: #111827;
+            font-weight: 800; margin-top: 2em; margin-bottom: 0.5em; color: #111827;
         }
 
         /* 이미지 컨테이너 */
         .news-image-container {
-            display: table;
+            display: table; /* 중앙 정렬 유지 */
             width: fit-content;
             max-width: 100%;
-            margin: 40px auto; /* 이미지 위아래 여백 */
-            user-select: none;
+            margin: 40px auto; 
+            text-align: center;
         }
 
         .news-image-container img {
             display: block;
-            width: auto;
             max-width: 100%;
             height: auto;
             border-radius: 8px 8px 0 0;
@@ -202,8 +173,8 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
             border-bottom: none;
         }
 
-        /* 캡션 박스 */
-        .news-caption {
+        /* 캡션 입력창 (Input으로 변경됨) */
+        input.news-caption {
             display: block;
             width: 100%;
             box-sizing: border-box;
@@ -216,13 +187,11 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
             font-size: 13px;
             font-weight: 500;
             outline: none;
-            user-select: text;
-            cursor: text;
-            text-align: left;
-            word-break: break-all;
+            text-align: center; /* 가운데 정렬 */
+            margin: 0;
         }
         
-        .news-caption:focus { background-color: #f3f4f6; }
+        input.news-caption:focus { background-color: #fff; border-color: #3b82f6; }
       `}</style>
 
       <ReactQuill
