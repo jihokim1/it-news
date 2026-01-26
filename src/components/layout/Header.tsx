@@ -62,12 +62,8 @@ export async function Header() {
          <div className="container mx-auto px-4 max-w-screen-xl flex items-center gap-4">
              <div className="flex items-center gap-2 shrink-0">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                 </span>
-                <span className="text-blue-400 text-[11px] md:text-xs font-black tracking-widest uppercase">
-                    Running Issue
-                </span>
+                
                 <div className="w-[1px] h-3 bg-slate-700 mx-2"></div>
              </div>
              <div className="flex-1 overflow-hidden text-gray-200 font-medium text-xs">
