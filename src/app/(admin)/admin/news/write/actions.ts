@@ -68,7 +68,7 @@ const { data } = supabase.storage.from("news-images").getPublicUrl(fileName);
 return data.publicUrl;
 }
 
-// 4. 기사 저장/수정 통합 액션 (기자 정보 & 태그 추가됨)
+// 4. 기사 저장/수정 통합 액션
 export async function saveNews(formData: FormData) {
 const idStr = formData.get("id") as string;
 const title = formData.get("title") as string;
@@ -77,79 +77,88 @@ const importance = formData.get("importance") as string;
 const summary = formData.get("summary") as string;
 const content = formData.get("content") as string;
 const thumbnailUrl = formData.get("thumbnailUrl") as string;
-
-// 👇 [추가된 부분] 폼에서 넘어온 기자 정보와 태그 수신
 const reporterName = formData.get("reporterName") as string;
 const reporterEmail = formData.get("reporterEmail") as string;
 const tags = formData.get("tags") as string;
 
+// 👇 [1. 여기 추가] 폼에서 날짜 문자열 가져오기
+const publishedAtStr = formData.get("publishedAt") as string;
+
+// 👇 [2. 여기 추가] 값이 있으면 Date 변환, 없으면 현재 시간(즉시 발행)
+// 폼에서 값을 안 보내면 빈 문자열("")이 오므로, 이때는 new Date()가 됨
+const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date();
+
 const finalImageUrl = thumbnailUrl || null;
 
-// 저장할 데이터 객체 미리 만들기
+// 저장할 데이터 객체
 const dataToSave = {
-title,
-category,
-importance, 
-summary,
-content,
-imageUrl: finalImageUrl,
-// DB 필드에 매핑
-reporterName,
-reporterEmail,
-tags
+    title,
+    category,
+    importance,
+    summary,
+    content,
+    imageUrl: finalImageUrl,
+    reporterName,
+    reporterEmail,
+    tags,
+    // 👇 [3. 여기 추가] DB에 저장할 날짜 필드
+    publishedAt, 
 };
 
 if (idStr) {
-// 수정 (Update)
-await prisma.news.update({
+    // 수정 (Update)
+    await prisma.news.update({
     where: { id: Number(idStr) },
     data: dataToSave,
-});
+    });
 } else {
-// 신규 (Create)
-await prisma.news.create({
+    // 신규 (Create)
+    await prisma.news.create({
     data: {
-    ...dataToSave,
-    views: 0,
+        ...dataToSave,
+        views: 0,
     },
-});
-// 메인 페이지 캐시를 즉시 무효화하여 새로운 기사가 보이게 합니다.
-revalidatePath("/"); 
-// 해당 카테고리 목록 페이지도 갱신합니다.
-revalidatePath(`/news/${category}`);
-// 관리자 목록 페이지를 갱신합니다.
-revalidatePath("/admin/news");
-
-// 페이지 이동
-redirect("/admin/news");
-
-}
-
-revalidatePath("/admin/news");
-redirect("/admin/news");
-}
-
-// 5. [추가] 모바일 뉴스 '더보기' 기능 (PC/모바일 공용 데이터 조회)
-export async function getMoreNews(category: string, page: number) {
-    const pageSize = 20; 
+    });
     
+    // (Create일 때 리다이렉트 처리)
+    revalidatePath("/");
+    revalidatePath(`/news/${category}`);
+    revalidatePath("/admin/news");
+    redirect("/admin/news");
+}
+
+// (Update일 때 리다이렉트 처리)
+revalidatePath("/");
+revalidatePath(`/news/${category}`); // 혹시 모르니 여기도 추가
+revalidatePath("/admin/news");
+redirect("/admin/news");
+}
+
+// 5. [수정됨] 모바일 뉴스 '더보기' 기능 (예약 발행 필터링 적용)
+export async function getMoreNews(category: string, page: number) {
+const pageSize = 20;
+
 // 카테고리 디코딩
 const decodedCategory = decodeURIComponent(category);
 
-// ⭐ [핵심 수정] 카테고리가 'ALL'이면 조건 없이({}) 검색, 아니면 필터링
-const whereCondition = (category === "ALL") 
-    ? {} 
+// ⭐ [핵심 수정] 어떤 경우든 '현재 시간보다 이전에 발행된(lte)' 글만 가져오기
+const whereCondition = (category === "ALL")
+    ? {
+        publishedAt: { lte: new Date() } // 전체보기: 예약글 제외
+    }
     : {
         category: {
         contains: decodedCategory,
         mode: 'insensitive' as const,
         },
+        publishedAt: { lte: new Date() } // 카테고리별 보기: 예약글 제외
     };
 
 try {
     const news = await prisma.news.findMany({
     where: whereCondition,
-    orderBy: { createdAt: "desc" },
+    // 👇 [정렬 변경] 작성일(createdAt) -> 발행일(publishedAt) 기준 내림차순
+    orderBy: { publishedAt: "desc" }, 
     take: pageSize,
     skip: (page - 1) * pageSize,
     });

@@ -10,19 +10,15 @@ interface Props {
   searchParams: Promise<{ page?: string }>;
 }
 
-// 1. [핵심] 박사님이 원하시는 "한글 이름표"를 여기에 정의했습니다.
-// URL(영어)로 들어오면 -> 화면(한글)로 바꿔주는 번역기입니다.
 const CATEGORY_MAP: Record<string, string> = {
-  all: "전체 기사",      // all -> 전체 기사
-  ai: "AI",            // ai -> AI
-  tech: "테크",        // tech -> 테크
-  business: "비즈니스", // business -> 비즈니스
-  stock: "주식",       // stock -> 주식
-  coin: "코인",        // coin -> 코인
-  it: "IT",            // it -> IT
+  all: "전체 기사",      
+  ai: "AI",            
+  tech: "테크",        
+  business: "IT", 
+  stock: "주식",       
+  coin: "코인",        
 };
 
-// 2. 카테고리별 색상 설정 (한글 기준)
 const getCategoryColor = (categoryName: string) => {
   const name = categoryName.trim();
   if (name === "AI") return "text-blue-600";
@@ -30,7 +26,7 @@ const getCategoryColor = (categoryName: string) => {
   if (name === "비즈니스" || name === "기업") return "text-violet-600";
   if (name === "주식" || name === "마켓") return "text-red-600";
   if (name === "코인" || name === "크립토") return "text-orange-600";
-  if (name === "전체 기사") return "text-slate-900"; // 전체는 검정색
+  if (name === "전체 기사") return "text-slate-900"; 
   return "text-slate-600";
 };
 
@@ -38,44 +34,39 @@ export default async function NewsCategoryPage({ params, searchParams }: Props) 
   const { category } = await params;
   const { page } = await searchParams;
   
-  // URL에서 온 값 (예: 'all', 'tech', 'stock')
   const rawCategory = decodeURIComponent(category).toLowerCase();
-
-  // 1. [수정] 박사님이 원하시는 "한글 제목" 가져오기
-  // 맵에 있으면 한글로, 없으면 그냥 영어(rawCategory) 보여줌
   const displayTitle = CATEGORY_MAP[rawCategory] || rawCategory.toUpperCase();
 
-  // 2. 페이지네이션 설정
   const currentPage = Number(page) || 1;
   const pageSize = 20;
   const skip = (currentPage - 1) * pageSize;
 
-  // 3. DB 조회 조건 설정 ('all'이면 조건 없음)
   const isAll = rawCategory === "all";
   
+  // 👇 [핵심 수정 1] 카테고리 페이지에서도 '예약된 기사' 숨기기 (lte: new Date())
   const whereCondition = isAll 
-    ? {} 
+    ? {
+        publishedAt: { lte: new Date() } // 전체보기일 때도 시간 체크
+      } 
     : {
         category: {
-          // DB에는 영문/한글 섞여 있을 수 있으니 둘 다 찾도록 처리할 수도 있지만,
-          // 일단 URL값(tech 등)을 포함하는 것으로 검색
           contains: rawCategory, 
           mode: 'insensitive' as const, 
         },
+        publishedAt: { lte: new Date() } // 특정 카테고리일 때도 시간 체크
       };
 
-  // 4. DB 조회
   const [newsList, totalCount] = await Promise.all([
     prisma.news.findMany({
       where: whereCondition,
-      orderBy: { createdAt: "desc" },
+      // 👇 [핵심 수정 2] 정렬 기준을 작성일 -> 발행일로 변경
+      orderBy: { publishedAt: "desc" },
       take: pageSize,
       skip: skip,
     }),
     prisma.news.count({ where: whereCondition }),
   ]);
 
-  // 5. 화면 갱신용 키값 (데이터 바뀌면 화면 갈아엎기)
   const refreshKey = newsList.length > 0 ? newsList[0].id : "empty";
 
   return (
@@ -87,7 +78,6 @@ export default async function NewsCategoryPage({ params, searchParams }: Props) 
             {/* [왼쪽] 기사 리스트 */}
             <div className="lg:col-span-3">
                 
-                {/* 헤더: 여기서 이제 '전체 기사', '테크', '주식' 으로 나옵니다. */}
                 <div className="flex items-end gap-3 mb-8 border-b-2 border-slate-900 pb-4">
                     <h1 className={`text-3xl font-black uppercase ${getCategoryColor(displayTitle)}`}>
                         {displayTitle}
@@ -100,10 +90,9 @@ export default async function NewsCategoryPage({ params, searchParams }: Props) 
                     </div>
                 ) : (
                     <ResponsiveNewsList 
-                        // 키값에 한글제목을 넣어서 확실하게 구분
                         key={`${rawCategory}-${currentPage}-${refreshKey}`}
                         initialNews={newsList} 
-                        category={category} // URL 유지용으로 원본 전달
+                        category={category} 
                         totalCount={totalCount}
                         currentPage={currentPage}
                     />

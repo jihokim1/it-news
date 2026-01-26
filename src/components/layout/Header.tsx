@@ -9,7 +9,7 @@ import TopNav from "./TopNav";
 
 export async function Header() {
   const headlines = await prisma.news.findMany({
-    take: 4,
+    take: 5,
     orderBy: { createdAt: "desc" },
     select: { id: true, title: true, category: true },
   });

@@ -14,8 +14,11 @@ model News {
   importance String   @default("normal")
   summary    String   @db.Text
   content    String   @db.Text
+  
+  publishedAt DateTime @default(now())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  
   imageUrl   String?  
   views     Int      @default(0)
   reporterName  String?  

@@ -18,7 +18,7 @@ loading: () => <div className="h-96 flex items-center justify-center border text
 export const dynamic = "force-dynamic";
 
 const REPORTERS = [
-{ name: "김형식 기", email: "trendit_news@naver.com" },
+{ name: "김형식 기자", email: "trendit_news@naver.com" },
 { name: "이정수 기자", email: "trendit_news@naver.com" },
 { name: "김지영 기자", email: "trendit_news@naver.com" },
 { name: "박민수 기자", email: "trendit_news@naver.com" },
@@ -41,6 +41,9 @@ const [tags, setTags] = useState("");
 const [gallery, setGallery] = useState<string[]>([]);
 const [selectedThumbnail, setSelectedThumbnail] = useState<string>("");
 
+// 👇 [신규 추가] 예약 발행 여부 상태 (기본값: false - 즉시발행)
+const [isReservation, setIsReservation] = useState(false);
+
 useEffect(() => {
 if (!id) return;
 const loadData = async () => {
@@ -56,6 +59,9 @@ const loadData = async () => {
         setReporterName(news.reporterName || "인디뉴스");
         setReporterEmail(news.reporterEmail || "");
         setTags(news.tags || "");
+
+        // (선택 사항) 수정 시 이미 예약된 글이라면 예약 상태 켜기 로직을 여기에 추가할 수 있습니다.
+        // 현재는 요청하신 대로 기존 로직 유지 위주로 구성했습니다.
 
         const parser = new DOMParser();
         const doc = parser.parseFromString(news.content, "text/html");
@@ -148,6 +154,50 @@ return (
                 <option value="Game">게임</option>
             </select>
             </div>
+
+            {/* 👇 [수정됨] 예약 발행 토글 & 5분 단위 입력기 */}
+            <div className="flex items-center">
+            <label className="w-24 text-sm font-bold text-gray-800">게시 일시</label>
+            <div className="flex-1 flex items-center gap-4">
+                {/* 1. 예약 버튼 (체크박스 형태) */}
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input 
+                    type="checkbox" 
+                    checked={isReservation} 
+                    onChange={(e) => setIsReservation(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-bold text-gray-700">예약 발행 설정</span>
+                </label>
+
+                {/* 2. 날짜 선택기 (버튼 눌렀을 때만 나타남) */}
+                {isReservation && (
+                <div className="flex items-center gap-2 animate-fadeIn">
+                    <span className="text-gray-300">|</span>
+                    <input 
+                    type="datetime-local" 
+                    name="publishedAt"
+                    step="300"  // 👈 [핵심] 300초 = 5분 단위 설정
+                    required={isReservation} // 예약 체크했으면 날짜 필수 입력
+                    // 기본값: 현재 시간 + 10분 (한국 시간 보정)
+                    defaultValue={new Date(Date.now() + 9 * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString().slice(0, 16)} 
+                    className="p-2 border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500"
+                    />
+                    <p className="text-xs text-blue-600 font-medium">
+                    * 설정한 시간에 자동으로 공개됩니다.
+                    </p>
+                </div>
+                )}
+                
+                {/* 3. 예약 안 했을 때 안내 문구 */}
+                {!isReservation && (
+                <p className="text-xs text-gray-400 ml-2">
+                    * 체크하지 않으면 <span className="font-bold text-gray-500">즉시 발행</span>됩니다.
+                </p>
+                )}
+            </div>
+            </div>
+            {/* 👆 수정 완료 */}
 
             <div className="flex items-center">
             <label className="w-24 text-sm font-bold text-gray-800">기자</label>

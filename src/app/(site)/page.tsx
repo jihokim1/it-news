@@ -37,9 +37,16 @@ const getCategoryColor = (id: string) => {
 };
 
 export default async function HomePage() {
-  const allNews = await prisma.news.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+    const allNews = await prisma.news.findMany({
+        // 👇 [핵심 수정 1] 현재 시간(new Date())보다 작거나 같은(lte) 기사만 가져오기
+        where: {
+        publishedAt: {
+        lte: new Date(), 
+        },
+    },
+    // 👇 [추천 수정] 작성일(createdAt) 대신 발행일(publishedAt) 기준으로 정렬
+    orderBy: { publishedAt: "desc" }, 
+    });
 
   // [수정됨] 중요도(importance)가 대문자 High든 소문자 high든 다 찾아내도록 변경
   const heroNews = allNews.filter((n) => n.importance && n.importance.toLowerCase() === "high").slice(0, 5);
@@ -84,7 +91,7 @@ export default async function HomePage() {
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
       
-      <div className="container mx-auto px-4 py-8 max-w-screen-xl">
+      <div className="container mx-auto px-4 py-8 max-w-[1200px]">
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-10">
             
