@@ -63,17 +63,34 @@ const dateString = new Date(news.createdAt).toLocaleDateString("ko-KR", {
 year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
 });
 
-const safeContent = news.content.replace(/contenteditable/g, 'data-disabled');
+// 👇 [핵심 수정] 입력창을 숨기는 게 아니라, 글자만 쏙 뽑아서 텍스트로 바꿉니다.
+let safeContent = news.content || "";
+
+// 1. [캡션 살리기] <input value="내용"> 패턴을 찾아서 <figcaption>내용</figcaption>으로 변환
+// 이렇게 해야 '온라인커뮤니티' 같은 글자가 입력창 밖으로 나와서 보입니다.
+safeContent = safeContent.replace(
+    /<input[^>]*value=["']([^"']+)["'][^>]*>/g, 
+    '<figcaption class="text-sm text-gray-500 text-center mt-2 font-medium">$1</figcaption>'
+);
+
+// 2. [청소] 글자가 없는 빈 입력창(<input>)은 삭제
+safeContent = safeContent.replace(/<input[^>]*>/g, '');
+
+// 3. [편집 도구 제거] contenteditable 속성 비활성화 및 툴팁 제거
+safeContent = safeContent
+    .replace(/contenteditable="true"/g, 'contenteditable="false"')
+    .replace(/class="ql-cursor"/g, 'style="display:none"') // 커서 숨김
+    .replace(/<div class="ql-tooltip[^>]*>.*?<\/div>/g, ''); // 툴팁 제거
+
+
 const tagsArray = news.tags ? news.tags.split(",").map(t => t.trim()) : [];
 const summaryLines = news.summary ? news.summary.split("\n") : [];
 
 // ⭐ [SEO 최적화 추가] 구글 검색엔진용 '뉴스 기사' 구조화 데이터 (JSON-LD) 생성
-// 이 데이터가 있어야 구글 뉴스 탭이나 캐러셀에 노출될 확률이 높아집니다.
 const jsonLd = {
 "@context": "https://schema.org",
 "@type": "NewsArticle",
 "headline": news.title,
-// 이미지가 없으면 사이트 대표 이미지를 넣어주어 에러를 방지합니다.
 "image": [
 news.imageUrl || 'https://www.trendit.ai.kr/opengraph-image.png'
 ],
@@ -88,7 +105,6 @@ news.imageUrl || 'https://www.trendit.ai.kr/opengraph-image.png'
 };
 
 // ⭐ [SEO 업그레이드] 브레드크럼(Breadcrumb) 구조화 데이터 추가
-// 검색 결과에 '홈 > 카테고리 > 기사제목' 경로를 예쁘게 보여줍니다.
 const breadcrumbLd = {
 "@context": "https://schema.org",
 "@type": "BreadcrumbList",
@@ -115,33 +131,26 @@ const breadcrumbLd = {
 };
 
 return (
-// [수정] 배경색을 모바일에서는 흰색(white), PC에서는 회색(gray-50)으로 분리하여 앱 같은 느낌
 <div className="bg-white md:bg-gray-50 min-h-screen pb-10 md:pb-20 font-sans text-[#111827]">
 
-{/* ⭐ [SEO 최적화 추가] 만든 명찰(JSON-LD)을 페이지에 심는 스크립트 */}
 <Script
     id="news-jsonld"
     type="application/ld+json"
     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 />
 
-{/* ⭐ [SEO 업그레이드] 브레드크럼 스크립트 추가 */}
 <Script
     id="breadcrumb-jsonld"
     type="application/ld+json"
     dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
 />
 
-{/* [수정] 모바일 패딩 대폭 축소 (px-0 md:px-6) */}
 <div className="max-w-[1280px] mx-auto px-0 md:px-6 lg:px-16 py-0 md:py-12">
 
 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
     
-    {/* [왼쪽] 기사 본문 영역 */}
-    {/* [수정] 모바일에서는 테두리와 둥근 모서리 제거 (border-0 rounded-none) */}
     <div className="lg:col-span-3 bg-white md:rounded-2xl md:border border-gray-200 md:shadow-sm overflow-hidden">
         
-        {/* [수정] 헤더 패딩 축소 (px-5) */}
         <header className="px-5 md:px-8 pt-6 md:pt-10 pb-4 border-b border-gray-100">
             <Link href={`/news/${category}`}>
                 <span className="inline-block text-blue-600 font-black text-sm mb-2 uppercase hover:underline cursor-pointer transition-colors">
@@ -149,7 +158,6 @@ return (
                 </span>
             </Link>
             
-            {/* [수정] 제목 폰트 사이즈 및 줄간격 모바일 최적화 */}
             <h1 className="text-[26px] md:text-4xl font-black text-gray-900 leading-[1.3] mb-4 tracking-tight">
                 {news.title}
             </h1>
@@ -165,7 +173,6 @@ return (
             )}
 
             <div className="flex justify-between items-end text-gray-400 text-xs md:text-sm pt-2">
-                {/* ⭐ [SEO 업그레이드] 시맨틱 태그 time 적용 (검색엔진 시간 인식 강화) */}
                 <span>
                     {news.reporterName || "이정혁 기자"} ·{" "}
                     <time dateTime={news.createdAt.toISOString()} itemProp="datePublished">
@@ -175,15 +182,12 @@ return (
             </div>
         </header>
 
-        {/* [수정] 본문 패딩 축소 (px-5) */}
         <article className="px-5 md:px-8 py-6 md:py-8">
-            {/* [수정] dangerouslySetInnerHTML 스타일링 클래스(view-content)가 핵심 */}
             <div className="view-content max-w-none mx-auto text-gray-800" dangerouslySetInnerHTML={{ __html: safeContent }} />
         </article>
 
         <div className="px-5 md:px-8 mt-4 pb-10">
             
-            {/* 기자 정보 카드 */}
             <div className="border-t border-b border-gray-100 py-5 flex justify-between items-center bg-gray-50 rounded-lg px-4 mb-8">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 text-xl shadow-sm">
@@ -196,7 +200,6 @@ return (
                 </div>
             </div>
 
-            {/* 태그 영역 */}
             {tagsArray.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-10">
                     {tagsArray.map((tag, idx) => (
@@ -207,7 +210,6 @@ return (
                 </div>
             )}
 
-            {/* 관련 기사 */}
             <div className="mb-10 pt-2">
                 <h3 className="text-base md:text-lg font-bold mb-3 text-slate-900 flex items-center gap-2">
                     <span className="w-1 h-4 bg-slate-900 inline-block"></span>
@@ -228,7 +230,6 @@ return (
                 </ul>
             </div>
 
-            {/* 댓글 영역 */}
             <div className="pt-8 border-t border-gray-100">
                 <CommentForm newsId={news.id} />
                 <div className="mt-8">
@@ -250,25 +251,23 @@ return (
 </div>
 
 <style>{`
-/* [핵심 처방] 모바일 최적화 스타일 */
 .view-content {
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    font-size: 17px; /* 모바일 가독성 최적화 */
+    font-size: 17px;
     line-height: 1.65;
     letter-spacing: -0.01em;
     color: #333;
-    word-break: break-word; /* 긴 단어 줄바꿈 */
+    word-break: break-word;
 }
 
-/* 이미지 컨테이너: 무조건 꽉 차게 */
+/* 이미지 스타일: 둥근 모서리 등 */
 .news-image-container {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 24px 0 !important; /* 위아래 여백 축소 */
+    margin: 24px 0 !important;
 }
 
-/* 이미지 자체: 꽉 차게 + 둥근 모서리 */
 .news-image-container img {
     display: block;
     width: 100% !important;
@@ -276,7 +275,17 @@ return (
     border-radius: 6px;
 }
 
-/* 텍스트 간격 조정 */
+/* 👇 [스타일 추가] 캡션(figcaption) 예쁘게 꾸미기 */
+.view-content figcaption {
+    display: block;
+    width: 100%;
+    text-align: center;
+    color: #6b7280; /* 회색 */
+    font-size: 0.875rem; /* 작은 글씨 */
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
 .view-content p { margin-bottom: 1.35rem; }
 
 .view-content h1, .view-content h2, .view-content h3 {
@@ -298,7 +307,6 @@ return (
     font-size: 0.95em;
 }
 
-/* PC 화면 대응 (미디어 쿼리) */
 @media (min-width: 768px) {
     .view-content { font-size: 18px; line-height: 1.8; }
     .news-image-container { margin: 40px auto !important; }
