@@ -163,7 +163,7 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
             max-width: 720px; 
             margin: 0 auto; 
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
-            font-size: 17px;
+            font-size: 12px;
             line-height: 1.8;
             color: #374151;
         }
