@@ -48,6 +48,14 @@ export const metadata: Metadata = {
       "naver-site-verification": "네이버-웹마스터도구-코드-입력",
     },
   },
+
+  // ⭐ [추가] 트위터 카드 설정
+  twitter: {
+    card: "summary_large_image", // 이미지를 크게 보여줌
+    title: "트렌드IT - 대한민국 No.1 IT 뉴스",
+    description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
+    images: ["/logo.png"], // 대표 이미지
+  },
 };
 
 export default function RootLayout({

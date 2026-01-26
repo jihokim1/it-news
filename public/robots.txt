@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/  # 관리자 페이지는 검색되면 안 됨
+Disallow: /api/    # API도 굳이 긁어갈 필요 없음
+
+Sitemap: https://www.trendit.ai.kr/sitemap.xml
