@@ -36,7 +36,7 @@ const [category, setCategory] = useState("AI");
 const [importance, setImportance] = useState("normal");
 const [content, setContent] = useState("");
 const [reporterName, setReporterName] = useState("IT뉴스");
-const [reporterEmail, setReporterEmail] = useState("webmaster@indinews.co.kr");
+const [reporterEmail, setReporterEmail] = useState("trendit_news@naver.com");
 const [tags, setTags] = useState("");
 const [gallery, setGallery] = useState<string[]>([]);
 const [selectedThumbnail, setSelectedThumbnail] = useState<string>("");
@@ -56,7 +56,7 @@ const loadData = async () => {
         setImportance(news.importance || "normal");
         setContent(news.content);
         setSelectedThumbnail(news.imageUrl || "");
-        setReporterName(news.reporterName || "인디뉴스");
+        setReporterName(news.reporterName || "");
         setReporterEmail(news.reporterEmail || "");
         setTags(news.tags || "");
 
@@ -146,9 +146,9 @@ return (
             <div className="flex items-center">
             <label className="w-24 text-sm font-bold text-gray-800">섹션</label>
             <select name="category" value={category} onChange={(e)=>setCategory(e.target.value)} className="w-48 p-2.5 bg-white border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                <option value="AI">AI / 인공지능</option>
-                <option value="Tech">테크 / 기기</option>
-                <option value="Business">IT 기업</option>
+                <option value="AI">AI </option>
+                <option value="Tech">테크</option>
+                <option value="IT">IT</option>
                 <option value="Coin">코인</option>
                 <option value="Stock">주식</option>
                 <option value="Game">게임</option>

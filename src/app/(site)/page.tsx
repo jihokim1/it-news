@@ -55,8 +55,8 @@ const majorNews = allNews
 
 const getCategoryNews = (catId: string, limit: number) => 
 allNews.filter((n) => 
-    (n.category?.toLowerCase() === catId.toLowerCase()) && 
-    !heroNews.find(h => h.id === n.id)
+    (n.category?.toLowerCase() === catId.toLowerCase()) 
+    // !heroNews.find(h => h.id === n.id)
 ).slice(0, limit);
 
 const ListItem = ({ item }: { item: any }) => (
@@ -165,11 +165,11 @@ return (
             {/* 섹션 3: 카테고리별 뉴스 (AI, IT 등) */}
             <div className="space-y-10">
                 {TOP_WIDE_CATEGORIES.map((cat) => {
-                    const news = getCategoryNews(cat.id, 4);
+                    const news = getCategoryNews(cat.id, 5);
                     if (news.length === 0) return null;
                     
                     const mainCatNews = news[0];
-                    const subCatNews = news.slice(1, 4);
+                    const subCatNews = news.slice(1, 5);
                     const titleColor = getCategoryColor(cat.id);
 
                     return (
