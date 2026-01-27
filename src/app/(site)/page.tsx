@@ -212,10 +212,10 @@ return (
             {/* 섹션 4: 주식 & 코인 */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t-2 border-gray-200 pt-6">
                 {MIDDLE_SPLIT_CATEGORIES.map((cat) => {
-                    const news = getCategoryNews(cat.id, 4);
+                    const news = getCategoryNews(cat.id, 5);
                     if (news.length === 0) return null;
                     const main = news[0];
-                    const subs = news.slice(1, 4);
+                    const subs = news.slice(1, 5);
                     const titleColor = getCategoryColor(cat.id);
 
                     return (
@@ -255,10 +255,10 @@ return (
             {/* 섹션 5: 테크 */}
             {(() => {
                 const cat = BOTTOM_CATEGORY;
-                const news = getCategoryNews(cat.id, 4);
+                const news = getCategoryNews(cat.id, 5);
                 if (news.length === 0) return null;
                 const mainCatNews = news[0];
-                const subCatNews = news.slice(1, 4);
+                const subCatNews = news.slice(1, 5);
                 const titleColor = getCategoryColor(cat.id);
 
                 return (
