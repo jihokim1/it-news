@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getMoreNews } from "@/app/(admin)/admin/news/write/actions";
+import Image from "next/image"; // 👈 1. 고성능 이미지 컴포넌트 추가
 
 interface NewsItem {
 id: number;
@@ -48,9 +49,9 @@ export default function ResponsiveNewsList({ initialNews, category, totalCount, 
 const [newsList, setNewsList] = useState<NewsItem[]>(initialNews);
 
 // 모바일 전용 상태
-const [mobilePage, setMobilePage] = useState(currentPage); // 모바일은 독자적으로 페이지 카운트
+const [mobilePage, setMobilePage] = useState(currentPage); 
 const [isLoading, setIsLoading] = useState(false);
-const [mobileLimit, setMobileLimit] = useState(10); // 모바일에서 처음에 보여줄 개수 (10개)
+const [mobileLimit, setMobileLimit] = useState(10); 
 
 // PC 페이지네이션 계산
 const pageSize = 20;
@@ -60,24 +61,20 @@ const hasPrevPage = currentPage > 1;
 
 // [모바일] '더보기' 버튼 클릭 핸들러
 const handleLoadMore = async () => {
-// 1. 현재 로딩된 리스트 안에서 아직 안 보여준 게 있는지 확인
-// (예: 20개 가져왔는데 10개만 보여주고 있었다면, 나머지 10개 보여주기)
 if (mobileLimit < newsList.length) {
     setMobileLimit((prev) => prev + 10);
     return;
 }
 
-// 2. 다 보여줬다면 서버에서 다음 페이지(20개) 가져오기
 setIsLoading(true);
 try {
     const nextPage = mobilePage + 1;
     const newItems = await getMoreNews(category, nextPage);
 
     if (newItems.length > 0) {
-    // 기존 리스트 뒤에 붙이기
     setNewsList((prev) => [...prev, ...newItems]);
     setMobilePage(nextPage);
-    setMobileLimit((prev) => prev + 10); // 10개 더 보여주기
+    setMobileLimit((prev) => prev + 10); 
     }
 } catch (error) {
     console.error("Failed to load more news:", error);
@@ -91,13 +88,11 @@ return (
     
     {/* 뉴스 리스트 렌더링 */}
     {newsList.map((item, index) => {
-    // [모바일 로직] 모바일(md:hidden)에서는 mobileLimit 개수까지만 보여줌
-    // [PC 로직] PC(md:block)에서는 항상 다 보여줌 (또는 페이지네이션 된 20개)
     const isHiddenOnMobile = index >= mobileLimit;
 
     return (
         <Link 
-        key={`${item.id}-${index}`} // 중복 방지용 key
+        key={`${item.id}-${index}`} 
         href={`/news/${item.category || category}/${item.id}`}
         className={`group block py-8 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors -mx-4 px-4 rounded-xl ${isHiddenOnMobile ? 'hidden md:block' : 'block'}`}
         >
@@ -105,7 +100,17 @@ return (
             {/* 썸네일 */}
             <div className="w-full md:w-[240px] aspect-[16/10] shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border border-gray-100 shadow-sm">
                 {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    // 🚀 [최적화] Next.js Image 적용
+                    <Image 
+                        src={item.imageUrl} 
+                        alt={item.title}
+                        fill // 부모 박스(relative)에 꽉 차게
+                        // 맨 위 2개(index 0, 1)는 기다리지 말고 즉시 로딩! (속도 향상 핵심)
+                        priority={index < 2} 
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        // 모바일: 화면 꽉 참(100vw), PC: 240px 고정
+                        sizes="(max-width: 768px) 100vw, 240px"
+                    />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 text-xs font-medium">No Image</div>
                 )}
@@ -137,7 +142,6 @@ return (
 
     {/* --- [모바일 전용] 더보기 버튼 (md:hidden) --- */}
     <div className="mt-8 md:hidden">
-    {/* 더 보여줄 데이터가 있거나 로딩 중일 때만 버튼 표시 */}
     {(mobileLimit < totalCount) && (
         <button 
             onClick={handleLoadMore}

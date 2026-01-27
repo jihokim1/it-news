@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
+import Image from "next/image"; // 👈 [최적화] 고성능 이미지 컴포넌트 추가
 
 /* DB 실시간 반영 설정 */
 export const dynamic = "force-dynamic";
@@ -62,7 +63,14 @@ const ListItem = ({ item }: { item: any }) => (
 <Link href={`/news/${item.category}/${item.id}`} className="flex gap-3 group items-start">
     <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
-            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            // 🚀 [최적화] 작은 썸네일도 Next Image 사용 (fill + sizes)
+            <Image 
+                src={item.imageUrl} 
+                alt={item.title} 
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                sizes="(max-width: 768px) 100px, 120px"
+            />
         )}
     </div>
     <div className="flex-1 min-w-0 flex flex-col justify-center h-full py-0.5">
@@ -93,7 +101,15 @@ return (
                         <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full">
                             <div className="relative w-full h-[300px] lg:h-[380px] rounded-2xl overflow-hidden shadow-sm border-2 border-gray-200">
                                 {mainHero.imageUrl ? (
-                                    <img src={mainHero.imageUrl} alt={mainHero.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                    // ⭐ [핵심 최적화] 메인 이미지는 priority={true}를 줘서 0순위로 로딩
+                                    <Image 
+                                        src={mainHero.imageUrl} 
+                                        alt={mainHero.title} 
+                                        fill
+                                        priority={true} // 👈 속도 향상의 핵심
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+                                    />
                                 ) : (
                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">NO IMAGE</div>
                                 )}
@@ -128,7 +144,16 @@ return (
                     {majorNews.map((item) => (
                             <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group block">
                             <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
-                                {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                                {item.imageUrl && (
+                                    // 🚀 [최적화]
+                                    <Image 
+                                        src={item.imageUrl} 
+                                        alt={item.title} 
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                        sizes="(max-width: 768px) 50vw, 25vw"
+                                    />
+                                )}
                             </div>
                             <h3 className="font-bold text-sm leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</h3>
                             <span className="text-gray-400 text-[10px] mt-1 block font-bold">{item.reporterName || "이정혁 기자"}</span>
@@ -156,8 +181,18 @@ return (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
                                     <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
-                                        <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200">
-                                                {mainCatNews.imageUrl && <img src={mainCatNews.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                                        {/* ⚠️ [중요] relative 클래스 추가 (Image fill 작동 필수 조건) */}
+                                        <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
+                                                {mainCatNews.imageUrl && (
+                                                    // 🚀 [최적화]
+                                                    <Image 
+                                                    src={mainCatNews.imageUrl} 
+                                                    alt={mainCatNews.title} 
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                                    />
+                                                )}
                                         </div>
                                         <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                                         <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
@@ -192,7 +227,16 @@ return (
                             <div className="mb-6">
                                 <Link href={`/news/${main.category || cat.id}/${main.id}`} className="group block">
                                     <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
-                                        {main.imageUrl && <img src={main.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                                        {main.imageUrl && (
+                                            // 🚀 [최적화]
+                                            <Image 
+                                                src={main.imageUrl} 
+                                                alt={main.title} 
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                sizes="(max-width: 768px) 100vw, 50vw"
+                                            />
+                                        )}
                                     </div>
                                     <h4 className="text-lg font-bold leading-snug text-slate-900 group-hover:text-blue-600 mb-2 line-clamp-2 transition-colors">{main.title}</h4>
                                     <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{main.summary}</p>
@@ -226,8 +270,18 @@ return (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
                                 <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
-                                    <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200">
-                                            {mainCatNews.imageUrl && <img src={mainCatNews.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                                    {/* ⚠️ [중요] relative 추가 */}
+                                    <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
+                                            {mainCatNews.imageUrl && (
+                                                // 🚀 [최적화]
+                                                <Image 
+                                                    src={mainCatNews.imageUrl} 
+                                                    alt={mainCatNews.title} 
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                                />
+                                            )}
                                     </div>
                                     <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                                     <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>

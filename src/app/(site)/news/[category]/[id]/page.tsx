@@ -6,6 +6,7 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 import CommentForm from "@/components/comment/CommentForm";
 import CommentList from "@/components/comment/CommentList";
 import Script from "next/script";
+import Image from "next/image"; 
 
 interface Props {
 params: Promise<{ category: string; id: string }>;
@@ -21,16 +22,15 @@ title: news.title,
 description: news.summary || news.title,
 keywords: news.tags || "",
 openGraph: {
-title: news.title,
-description: news.summary || news.title,
-images: news.imageUrl ? [news.imageUrl] : [],
+    title: news.title,
+    description: news.summary || news.title,
+    images: news.imageUrl ? [news.imageUrl] : [],
 },
-// ⭐ [SEO 업그레이드] 트위터 카드 메타데이터 추가 (SNS 공유 최적화)
 twitter: {
-card: "summary_large_image",
-title: news.title,
-description: news.summary || news.title,
-images: news.imageUrl ? [news.imageUrl] : [],
+    card: "summary_large_image",
+    title: news.title,
+    description: news.summary || news.title,
+    images: news.imageUrl ? [news.imageUrl] : [],
 },
 };
 }
@@ -44,8 +44,8 @@ if (isNaN(newsId)) return notFound();
 let news;
 try {
 const [updatedNews] = await prisma.$transaction([
-prisma.news.update({ where: { id: newsId }, data: { views: { increment: 1 } } }),
-prisma.newsView.create({ data: { newsId: newsId } }),
+    prisma.news.update({ where: { id: newsId }, data: { views: { increment: 1 } } }),
+    prisma.newsView.create({ data: { newsId: newsId } }),
 ]);
 news = updatedNews;
 } catch (error) {
@@ -63,70 +63,73 @@ const dateString = new Date(news.createdAt).toLocaleDateString("ko-KR", {
 year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
 });
 
-// 👇 [핵심 수정] 입력창을 숨기는 게 아니라, 글자만 쏙 뽑아서 텍스트로 바꿉니다.
+// 👇 [로직 변경] 캡션을 정규식으로 안전하게 추출 (본문 변환 X -> 추출 O)
+let captionText = "";
+const captionMatch = news.content?.match(/<input[^>]*value=["']([^"']+)["'][^>]*>/);
+if (captionMatch && captionMatch[1] && captionMatch[1] !== "undefined") {
+    captionText = captionMatch[1];
+}
+
+// 👇 [본문 청소]
 let safeContent = news.content || "";
 
-// 1. [캡션 살리기] <input value="내용"> 패턴을 찾아서 <figcaption>내용</figcaption>으로 변환
-// 이렇게 해야 '온라인커뮤니티' 같은 글자가 입력창 밖으로 나와서 보입니다.
-safeContent = safeContent.replace(
-    /<input[^>]*value=["']([^"']+)["'][^>]*>/g, 
-    '<figcaption class="text-sm text-gray-500 text-center mt-2 font-medium">$1</figcaption>'
-);
-
-// 2. [청소] 글자가 없는 빈 입력창(<input>)은 삭제
+// 1. 느린 이미지(<img>) 삭제 -> 위쪽에서 Fast Image로 보여줄 것임
+safeContent = safeContent.replace(/<img[^>]*>/g, '');
+// 2. 입력창(<input>) 삭제 -> 위쪽에서 텍스트로 보여줄 것임
 safeContent = safeContent.replace(/<input[^>]*>/g, '');
 
-// 3. [편집 도구 제거] contenteditable 속성 비활성화 및 툴팁 제거
+// 3. [핵심] 사진과 본문 사이의 쓸데없는 빈 줄 제거 (간격 좁히기)
+safeContent = safeContent.replace(/^(<p>\s*<br\s*\/?>\s*<\/p>)+/gi, '');
+safeContent = safeContent.replace(/^(<p>\s*<\/p>)+/gi, '');
+
+// 4. 편집기 찌꺼기 제거
 safeContent = safeContent
     .replace(/contenteditable="true"/g, 'contenteditable="false"')
-    .replace(/class="ql-cursor"/g, 'style="display:none"') // 커서 숨김
-    .replace(/<div class="ql-tooltip[^>]*>.*?<\/div>/g, ''); // 툴팁 제거
-
+    .replace(/class="ql-cursor"/g, 'style="display:none"') 
+    .replace(/<div class="ql-tooltip[^>]*>.*?<\/div>/g, ''); 
 
 const tagsArray = news.tags ? news.tags.split(",").map(t => t.trim()) : [];
 const summaryLines = news.summary ? news.summary.split("\n") : [];
 
-// ⭐ [SEO 최적화 추가] 구글 검색엔진용 '뉴스 기사' 구조화 데이터 (JSON-LD) 생성
 const jsonLd = {
 "@context": "https://schema.org",
 "@type": "NewsArticle",
 "headline": news.title,
 "image": [
-news.imageUrl || 'https://www.trendit.ai.kr/opengraph-image.png'
+    news.imageUrl || 'https://www.trendit.ai.kr/opengraph-image.png'
 ],
 "datePublished": news.createdAt.toISOString(),
 "dateModified": news.updatedAt.toISOString(), 
 "description": news.summary || news.title,
 "author": [{
-"@type": "Person",
-"name": news.reporterName || "TrendIT 취재팀",
-"url": "https://www.trendit.ai.kr"
+    "@type": "Person",
+    "name": news.reporterName || "TrendIT 취재팀",
+    "url": "https://www.trendit.ai.kr"
 }]
 };
 
-// ⭐ [SEO 업그레이드] 브레드크럼(Breadcrumb) 구조화 데이터 추가
 const breadcrumbLd = {
 "@context": "https://schema.org",
 "@type": "BreadcrumbList",
 "itemListElement": [
-{
-"@type": "ListItem",
-"position": 1,
-"name": "홈",
-"item": "https://www.trendit.ai.kr"
-},
-{
-"@type": "ListItem",
-"position": 2,
-"name": news.category || "전체",
-"item": `https://www.trendit.ai.kr/news/${news.category || "all"}`
-},
-{
-"@type": "ListItem",
-"position": 3,
-"name": news.title,
-"item": `https://www.trendit.ai.kr/news/${news.category}/${news.id}`
-}
+    {
+    "@type": "ListItem",
+    "position": 1,
+    "name": "홈",
+    "item": "https://www.trendit.ai.kr"
+    },
+    {
+    "@type": "ListItem",
+    "position": 2,
+    "name": news.category || "전체",
+    "item": `https://www.trendit.ai.kr/news/${news.category || "all"}`
+    },
+    {
+    "@type": "ListItem",
+    "position": 3,
+    "name": news.title,
+    "item": `https://www.trendit.ai.kr/news/${news.category}/${news.id}`
+    }
 ]
 };
 
@@ -182,12 +185,35 @@ return (
             </div>
         </header>
 
-        <article className="px-5 md:px-8 py-6 md:py-8">
+        {/* 👇 1. 대표 이미지 (priority=true로 속도 최적화) */}
+        {news.imageUrl && (
+            <div className="px-5 md:px-8 pt-6">
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm">
+                    <Image 
+                        src={news.imageUrl} 
+                        alt={news.title}
+                        fill
+                        priority={true} // 🚀 0.1초 로딩 핵심
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 800px"
+                    />
+                </div>
+            </div>
+        )}
+
+        {/* 👇 2. 출처 (캡션) - 이미지가 있을 때만 바로 밑에 붙임 */}
+        {news.imageUrl && captionText && (
+            <div className="px-5 md:px-8 pt-2 text-center">
+                <span className="text-xs text-gray-400 font-normal">{captionText}</span>
+            </div>
+        )}
+
+        {/* 👇 3. 본문 (위쪽 여백 제거 pt-4 -> 사진/캡션과 밀착) */}
+        <article className="px-5 md:px-8 pb-6 md:pb-8 pt-4">
             <div className="view-content max-w-none mx-auto text-gray-800" dangerouslySetInnerHTML={{ __html: safeContent }} />
         </article>
 
         <div className="px-5 md:px-8 mt-4 pb-10">
-            
             <div className="border-t border-b border-gray-100 py-5 flex justify-between items-center bg-gray-50 rounded-lg px-4 mb-8">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 text-xl shadow-sm">
@@ -260,31 +286,8 @@ return (
     word-break: break-word;
 }
 
-/* 이미지 스타일: 둥근 모서리 등 */
-.news-image-container {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 24px 0 !important;
-}
-
-.news-image-container img {
-    display: block;
-    width: 100% !important;
-    height: auto !important;
-    border-radius: 6px;
-}
-
-/* 👇 [스타일 추가] 캡션(figcaption) 예쁘게 꾸미기 */
-.view-content figcaption {
-    display: block;
-    width: 100%;
-    text-align: center;
-    color: #6b7280; /* 회색 */
-    font-size: 0.875rem; /* 작은 글씨 */
-    margin-top: 0.5rem;
-    font-weight: 500;
-}
+/* 본문에 남아있는 이미지 컨테이너 숨김 (안전장치) */
+.news-image-container { display: none !important; }
 
 .view-content p { margin-bottom: 1.35rem; }
 
@@ -309,7 +312,6 @@ return (
 
 @media (min-width: 768px) {
     .view-content { font-size: 18px; line-height: 1.8; }
-    .news-image-container { margin: 40px auto !important; }
 }
 `}</style>
 </div>
