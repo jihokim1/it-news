@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 // 👇 방금 만든 랭킹 위젯을 여기서 불러옵니다.
 import { MainRankingWidget } from "@/components/ranking/MainRankingWidget";
+import Image from "next/image"; // 👈 [최적화] 이미지 도구 추가
 
 export async function NewsSidebar() {
   // 1. 인기 뉴스 데이터 가져오기 (조회수 순)
@@ -37,10 +38,16 @@ export async function NewsSidebar() {
                 {/* 작은 썸네일 */}
                 <div className="w-16 h-12 shrink-0 rounded-md overflow-hidden bg-gray-100 border border-gray-100 relative">
                   {news.imageUrl ? (
-                    <img 
+                    // 🚀 [최적화] Next.js Image로 교체
+                    <Image 
                       src={news.imageUrl} 
                       alt="thumb" 
-                      className="w-full h-full object-cover" 
+                      fill
+                      // 작은 썸네일은 용량이 작아서 바로 받아도 부담 없음 (즉시 로딩)
+                      priority={true} 
+                      className="object-cover" 
+                      // 64px(w-16) 크기에 맞춰서 딱 필요한 만큼만 다운로드
+                      sizes="64px"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-300">No img</div>

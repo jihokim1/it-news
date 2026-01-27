@@ -7,7 +7,7 @@ return {
 rules: {
     userAgent: "*", // 모든 로봇 허용
     allow: "/",
-    disallow: ["/admin/", "/api/"], 
+    disallow: ["/admin/", "/api/"], // 관리자 페이지 막음
 },
 sitemap: `${baseUrl}/sitemap.xml`, // 지도 위치 알려줌
 };
