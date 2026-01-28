@@ -74,16 +74,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 박사님의 GA4 측정 ID
+  const GA_MEASUREMENT_ID = 'G-XMH2R1GDEW'; 
+
   return (
     <html lang="ko">
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8F9FA] text-slate-900 antialiased font-sans`}>
         
-        {/* ❌ 여기에 있던 NewsTicker 삭제! */}
-        
-        {children} {/* 여기에 메인 페이지(헤더 포함)가 들어옵니다 */}
+        {children}
 
         <Footer />
-        {/* 2. 네이버 애널리틱스 스크립트 추가 */}
+
+        {/* --- 네이버 애널리틱스 --- */}
         <Script 
           src="//wcs.pstatic.net/wcslog.js" 
           strategy="afterInteractive" 
@@ -96,6 +98,20 @@ export default function RootLayout({
             if(window.wcs) {
               wcs_do();
             }
+          `}
+        </Script>
+
+        {/* --- 구글 애널리틱스 (GA4) --- */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
       </body>
