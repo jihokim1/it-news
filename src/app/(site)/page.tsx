@@ -178,9 +178,9 @@ return (
                                         {new Date(mainHero.publishedAt).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h1 className="text-3xl md:text-3xl lg:text-2xl font-black text-white leading-tight mb-3 drop-shadow-lg line-clamp-2 break-keep">
-                                    {mainHero.title}
-                                </h1>
+                                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-3 drop-shadow-lg line-clamp-4 md:line-clamp-2 break-keep">
+                                        {mainHero.title}
+                                    </h1>
                                 <p className="text-gray-200 text-sm md:text-lg line-clamp-2 font-medium opacity-90 hidden md:block">
                                     {mainHero.summary}
                                 </p>

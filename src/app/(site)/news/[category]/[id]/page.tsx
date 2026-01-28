@@ -236,6 +236,7 @@ return (
                 </div>
             )}
 
+
             <div className="mb-10 pt-2">
                 <h3 className="text-base md:text-lg font-bold mb-3 text-slate-900 flex items-center gap-2">
                     <span className="w-1 h-4 bg-slate-900 inline-block"></span>

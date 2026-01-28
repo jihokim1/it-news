@@ -37,7 +37,7 @@ export default function CommentForm({ newsId }: { newsId: number }) {
           <input
             name="password"
             type="password"
-            placeholder="비밀번호(삭제용)"
+            placeholder="비밀번호"
             required
             className="w-1/3 p-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
           />
@@ -47,7 +47,7 @@ export default function CommentForm({ newsId }: { newsId: number }) {
         <div className="flex gap-3">
           <textarea
             name="content"
-            placeholder="내용을 입력하세요. (타인을 비방하는 내용은 삭제될 수 있습니다.)"
+            placeholder="내용을 입력하세요."
             required
             rows={3}
             className="w-full p-3 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
