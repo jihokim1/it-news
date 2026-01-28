@@ -35,14 +35,17 @@ const [summary, setSummary] = useState("");
 const [category, setCategory] = useState("AI");
 const [importance, setImportance] = useState("normal");
 const [content, setContent] = useState("");
-const [reporterName, setReporterName] = useState("IT뉴스");
+const [reporterName, setReporterName] = useState("박상혁 기자");
 const [reporterEmail, setReporterEmail] = useState("trendit_news@naver.com");
 const [tags, setTags] = useState("");
 const [gallery, setGallery] = useState<string[]>([]);
 const [selectedThumbnail, setSelectedThumbnail] = useState<string>("");
 
-// 👇 [신규 추가] 예약 발행 여부 상태 (기본값: false - 즉시발행)
+// 👇 [기존] 예약 발행 여부 상태
 const [isReservation, setIsReservation] = useState(false);
+
+// 👇 [신규 추가] 헤드라인 고정 상태 (Pinned)
+const [isPinned, setIsPinned] = useState(false);
 
 useEffect(() => {
 if (!id) return;
@@ -59,9 +62,11 @@ const loadData = async () => {
         setReporterName(news.reporterName || "");
         setReporterEmail(news.reporterEmail || "");
         setTags(news.tags || "");
-
-        // (선택 사항) 수정 시 이미 예약된 글이라면 예약 상태 켜기 로직을 여기에 추가할 수 있습니다.
-        // 현재는 요청하신 대로 기존 로직 유지 위주로 구성했습니다.
+        
+        // 👇 [신규 추가] DB에서 가져온 고정 여부 반영
+        // (DB에 isPinned 필드가 없으면 false 처리됨)
+        // @ts-ignore (DB 타입 업데이트 전일 경우 에러 방지용)
+        setIsPinned(news.isPinned || false);
 
         const parser = new DOMParser();
         const doc = parser.parseFromString(news.content, "text/html");
@@ -120,17 +125,26 @@ if (selected) {
 if (loading) return <div className="p-10 text-center font-bold text-gray-500">데이터 로딩중...</div>;
 
 return (
-<div className="min-h-screen bg-[#F8F9FA] font-sans p-6 flex justify-center">
-    <div className="w-full max-w-[1600px] flex gap-6 items-start">
-    <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <form action={saveNews} className="p-8">
+// 📱 [반응형] p-6 -> p-4 md:p-6 (모바일 여백 줄임)
+<div className="min-h-screen bg-[#F8F9FA] font-sans p-4 md:p-6 flex justify-center">
+    {/* 📱 [반응형] flex-col lg:flex-row (모바일: 세로 배치, PC: 가로 배치) */}
+    <div className="w-full max-w-[1600px] flex flex-col lg:flex-row gap-6 items-start">
+    
+    {/* 입력 폼 영역 */}
+    <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden w-full">
+        {/* 📱 [반응형] p-8 -> p-4 md:p-8 */}
+        <form action={saveNews} className="p-4 md:p-8">
         <input type="hidden" name="id" value={id || ""} />
         <input type="hidden" name="content" value={content} />
         <input type="hidden" name="thumbnailUrl" value={selectedThumbnail} />
+        {/* 👇 [필수] isPinned 값을 서버로 전송하기 위한 hidden input */}
+        <input type="hidden" name="isPinned" value={isPinned ? "true" : "false"} />
         
-        <div className="border-b border-gray-100 pb-6 mb-8 flex items-center gap-6">
-            <span className="text-sm font-bold text-gray-900 w-16">등급</span>
-            <div className="flex gap-2">
+        {/* 📱 [반응형] flex-col md:flex-row (모바일: 세로, PC: 가로) */}
+        <div className="border-b border-gray-100 pb-6 mb-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+            {/* 📱 [반응형] w-full md:w-16 (모바일: 전체 너비) */}
+            <span className="text-sm font-bold text-gray-900 w-full md:w-16">등급</span>
+            <div className="flex gap-2 flex-wrap">
             <label className={`px-4 py-2 text-sm rounded-lg cursor-pointer border transition-all ${importance === 'normal' ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                 <input type="radio" name="importance" value="normal" className="hidden" checked={importance === 'normal'} onChange={()=>setImportance('normal')} />
                 일반기사
@@ -139,13 +153,29 @@ return (
                 <input type="radio" name="importance" value="high" className="hidden" checked={importance === 'high'} onChange={()=>setImportance('high')} />
                 헤드라인
             </label>
+
+            {/* 👇 [신규 추가] 헤드라인 고정 버튼 */}
+            {/* 📱 [반응형] ml-2 -> md:ml-2 (모바일에서 마진 제거) */}
+            <label className={`md:ml-2 px-4 py-2 text-sm rounded-lg cursor-pointer border transition-all flex items-center gap-1 ${isPinned ? 'bg-purple-50 border-purple-200 text-purple-700 font-bold shadow-inner' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                <input 
+                    type="checkbox" 
+                    className="hidden" 
+                    checked={isPinned} 
+                    onChange={(e) => {
+                    setIsPinned(e.target.checked);
+                    }} 
+                />
+                <span>📌 헤드라인 고정</span>
+            </label>
             </div>
         </div>
 
         <div className="space-y-5 mb-8">
-            <div className="flex items-center">
-            <label className="w-24 text-sm font-bold text-gray-800">섹션</label>
-            <select name="category" value={category} onChange={(e)=>setCategory(e.target.value)} className="w-48 p-2.5 bg-white border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+            {/* 섹션 선택 */}
+            {/* 📱 [반응형] flex-col md:flex-row */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800">섹션</label>
+            <select name="category" value={category} onChange={(e)=>setCategory(e.target.value)} className="w-full md:w-48 p-2.5 bg-white border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                 <option value="AI">AI </option>
                 <option value="Tech">테크</option>
                 <option value="IT">IT</option>
@@ -155,11 +185,10 @@ return (
             </select>
             </div>
 
-            {/* 👇 [수정됨] 예약 발행 토글 & 5분 단위 입력기 */}
-            <div className="flex items-center">
-            <label className="w-24 text-sm font-bold text-gray-800">게시 일시</label>
-            <div className="flex-1 flex items-center gap-4">
-                {/* 1. 예약 버튼 (체크박스 형태) */}
+            {/* 예약 발행 설정 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800">게시 일시</label>
+            <div className="flex-1 flex flex-col md:flex-row md:items-center gap-2 md:gap-4 w-full">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input 
                     type="checkbox" 
@@ -170,55 +199,54 @@ return (
                 <span className="text-sm font-bold text-gray-700">예약 발행 설정</span>
                 </label>
 
-                {/* 2. 날짜 선택기 (버튼 눌렀을 때만 나타남) */}
                 {isReservation && (
-                <div className="flex items-center gap-2 animate-fadeIn">
-                    <span className="text-gray-300">|</span>
+                <div className="flex flex-wrap items-center gap-2 animate-fadeIn">
+                    <span className="hidden md:inline text-gray-300">|</span>
                     <input 
                     type="datetime-local" 
                     name="publishedAt"
-                    step="300"  // 👈 [핵심] 300초 = 5분 단위 설정
-                    required={isReservation} // 예약 체크했으면 날짜 필수 입력
-                    // 기본값: 현재 시간 + 10분 (한국 시간 보정)
+                    step="300"
+                    required={isReservation}
                     defaultValue={new Date(Date.now() + 9 * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString().slice(0, 16)} 
-                    className="p-2 border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500"
+                    className="p-2 border border-gray-300 rounded text-sm text-gray-700 outline-none focus:border-blue-500 w-full md:w-auto"
                     />
-                    <p className="text-xs text-blue-600 font-medium">
+                    <p className="text-xs text-blue-600 font-medium w-full md:w-auto">
                     * 설정한 시간에 자동으로 공개됩니다.
                     </p>
                 </div>
                 )}
                 
-                {/* 3. 예약 안 했을 때 안내 문구 */}
                 {!isReservation && (
-                <p className="text-xs text-gray-400 ml-2">
+                <p className="text-xs text-gray-400 md:ml-2">
                     * 체크하지 않으면 <span className="font-bold text-gray-500">즉시 발행</span>됩니다.
                 </p>
                 )}
             </div>
             </div>
-            {/* 👆 수정 완료 */}
 
-            <div className="flex items-center">
-            <label className="w-24 text-sm font-bold text-gray-800">기자</label>
-            <div className="flex-1 flex gap-2">
-                <select onChange={handleReporterSelect} className="w-36 p-2.5 bg-gray-50 border border-gray-300 rounded text-sm text-gray-600 outline-none">
+            {/* 기자 정보 입력 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800">기자</label>
+            <div className="flex-1 flex flex-col md:flex-row gap-2 w-full">
+                <select onChange={handleReporterSelect} className="w-full md:w-36 p-2.5 bg-gray-50 border border-gray-300 rounded text-sm text-gray-600 outline-none">
                 <option value="">자동선택...</option>
                 {REPORTERS.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
                 </select>
-                <input type="text" name="reporterName" value={reporterName} onChange={(e)=>setReporterName(e.target.value)} className="w-32 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500" placeholder="이름" />
-                <input type="text" name="reporterEmail" value={reporterEmail} onChange={(e)=>setReporterEmail(e.target.value)} className="flex-1 max-w-sm p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500" placeholder="이메일" />
+                <input type="text" name="reporterName" value={reporterName} onChange={(e)=>setReporterName(e.target.value)} className="w-full md:w-32 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500" placeholder="이름" />
+                <input type="text" name="reporterEmail" value={reporterEmail} onChange={(e)=>setReporterEmail(e.target.value)} className="flex-1 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500" placeholder="이메일" />
             </div>
             </div>
 
-            <div className="flex items-center">
-            <label className="w-24 text-sm font-bold text-gray-800">제목</label>
-            <input type="text" name="title" value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 p-2.5 border border-gray-300 rounded text-sm font-bold text-gray-900 outline-none focus:border-blue-500 placeholder-gray-300" placeholder="기사 제목을 입력하세요" />
+            {/* 제목 입력 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800">제목</label>
+            <input type="text" name="title" value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 w-full p-2.5 border border-gray-300 rounded text-sm font-bold text-gray-900 outline-none focus:border-blue-500 placeholder-gray-300" placeholder="기사 제목을 입력하세요" />
             </div>
 
-            <div className="flex items-start">
-            <label className="w-24 text-sm font-bold text-gray-800 pt-2.5">부제목</label>
-            <textarea name="summary" value={summary} onChange={(e)=>setSummary(e.target.value)} rows={3} className="flex-1 p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 resize-none leading-relaxed" placeholder="기사 요약문 (부제목)을 입력하세요." />
+            {/* 부제목 입력 */}
+            <div className="flex flex-col md:flex-row items-start gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800 md:pt-2.5">부제목</label>
+            <textarea name="summary" value={summary} onChange={(e)=>setSummary(e.target.value)} rows={3} className="flex-1 w-full p-2.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 resize-none leading-relaxed" placeholder="기사 요약문 (부제목)을 입력하세요." />
             </div>
         </div>
 
@@ -228,24 +256,28 @@ return (
 
         <div className="mt-8 border-t border-gray-100 pt-6">
             <p className="text-xs text-gray-400 mb-6">Tip. 본문 내용이 없으면 포털에 반영이 안될 수 있습니다.</p>
-            <div className="flex items-center mb-8">
-            <label className="w-24 text-sm font-bold text-gray-800">키워드</label>
-            <input type="text" name="tags" value={tags} onChange={(e)=>setTags(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 p-3 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 text-blue-600" placeholder="#태그 입력 (쉼표로 구분)" />
+            {/* 📱 [반응형] 키워드 영역 */}
+            <div className="flex flex-col md:flex-row md:items-center mb-8 gap-2 md:gap-0">
+            <label className="w-full md:w-24 text-sm font-bold text-gray-800">키워드</label>
+            <input type="text" name="tags" value={tags} onChange={(e)=>setTags(e.target.value)} onKeyDown={preventSubmitOnEnter} className="flex-1 w-full p-3 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 placeholder-gray-300 text-blue-600" placeholder="#태그 입력 (쉼표로 구분)" />
             </div>
             <button type="submit" className="w-full bg-[#3b82f6] hover:bg-blue-600 text-white text-lg font-bold py-4 rounded-lg shadow-sm transition-transform active:scale-[0.99]">저장하기</button>
         </div>
         </form>
     </div>
 
-    <aside className="w-[320px] bg-white rounded-xl shadow-sm border border-gray-200 h-[85vh] sticky top-6 flex flex-col">
+    {/* 사이드바 (라이브러리) */}
+    {/* 📱 [반응형] 모바일: w-full / PC: w-[320px], sticky top-6 */}
+    <aside className="w-full lg:w-[320px] bg-white rounded-xl shadow-sm border border-gray-200 h-auto lg:h-[85vh] relative lg:sticky lg:top-6 flex flex-col">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
         <span className="text-sm font-bold text-gray-800 flex items-center gap-2">🖼️ 라이브러리</span>
         <span className="bg-white border border-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">{gallery.length}</span>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin max-h-[300px] lg:max-h-none">
+        {/* 📱 [반응형] 모바일: grid-cols-4 (작게 여러개) / PC: grid-cols-2 */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 gap-2">
             {gallery.length === 0 ? (
-            <div className="col-span-2 py-20 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-lg">
+            <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-lg">
                 <span className="text-2xl mb-2">📷</span>
                 <span className="text-xs">이미지 없음</span>
             </div>

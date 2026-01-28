@@ -14,6 +14,9 @@ model News {
   importance String   @default("normal")
   summary    String   @db.Text
   content    String   @db.Text
+
+  isPinned    Boolean  @default(false) //  [추가] 메인 고정 여부 (true면 무조건 메인)
+
   
   publishedAt DateTime @default(now())
   createdAt  DateTime @default(now())
@@ -24,6 +27,7 @@ model News {
   reporterName  String?  
   reporterEmail String?  @default("indisnews1@gmail.com")
   tags          String?  //  콤마로 구분해서 저장
+
   newsViews  NewsView[]
   comments Comment[]
 }

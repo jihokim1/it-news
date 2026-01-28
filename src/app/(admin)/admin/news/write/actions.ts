@@ -70,6 +70,7 @@ return data.publicUrl;
 
 // 4. 기사 저장/수정 통합 액션
 export async function saveNews(formData: FormData) {
+const isPinned = formData.get("isPinned") === "true"; // 문자열 "true" 체크
 const idStr = formData.get("id") as string;
 const title = formData.get("title") as string;
 const category = formData.get("category") as string;
@@ -92,39 +93,42 @@ const finalImageUrl = thumbnailUrl || null;
 
 // 저장할 데이터 객체
 const dataToSave = {
-    title,
-    category,
-    importance,
-    summary,
-    content,
-    imageUrl: finalImageUrl,
-    reporterName,
-    reporterEmail,
-    tags,
-    // 👇 [3. 여기 추가] DB에 저장할 날짜 필드
-    publishedAt, 
+title,
+category,
+importance,
+summary,
+content,
+imageUrl: finalImageUrl,
+reporterName,
+reporterEmail,
+tags,
+// 👇 [3. 여기 추가] DB에 저장할 날짜 필드
+publishedAt,
+
+// 👇 [4. 여기 추가] 메인 고정 여부 (이게 빠져있어서 저장이 안 되었습니다)
+isPinned, 
 };
 
 if (idStr) {
-    // 수정 (Update)
-    await prisma.news.update({
+// 수정 (Update)
+await prisma.news.update({
     where: { id: Number(idStr) },
     data: dataToSave,
-    });
+});
 } else {
-    // 신규 (Create)
-    await prisma.news.create({
+// 신규 (Create)
+await prisma.news.create({
     data: {
-        ...dataToSave,
-        views: 0,
+    ...dataToSave,
+    views: 0,
     },
-    });
-    
-    // (Create일 때 리다이렉트 처리)
-    revalidatePath("/");
-    revalidatePath(`/news/${category}`);
-    revalidatePath("/admin/news");
-    redirect("/admin/news");
+});
+
+// (Create일 때 리다이렉트 처리)
+revalidatePath("/");
+revalidatePath(`/news/${category}`);
+revalidatePath("/admin/news");
+redirect("/admin/news");
 }
 
 // (Update일 때 리다이렉트 처리)
@@ -143,19 +147,19 @@ const decodedCategory = decodeURIComponent(category);
 
 // ⭐ [핵심 수정] 어떤 경우든 '현재 시간보다 이전에 발행된(lte)' 글만 가져오기
 const whereCondition = (category === "ALL")
-    ? {
-        publishedAt: { lte: new Date() } // 전체보기: 예약글 제외
+? {
+    publishedAt: { lte: new Date() } // 전체보기: 예약글 제외
     }
-    : {
-        category: {
+: {
+    category: {
         contains: decodedCategory,
         mode: 'insensitive' as const,
-        },
-        publishedAt: { lte: new Date() } // 카테고리별 보기: 예약글 제외
+    },
+    publishedAt: { lte: new Date() } // 카테고리별 보기: 예약글 제외
     };
 
 try {
-    const news = await prisma.news.findMany({
+const news = await prisma.news.findMany({
     where: whereCondition,
     // 👇 [정렬 변경] 작성일(createdAt) -> 발행일(publishedAt) 기준 내림차순
     orderBy: { publishedAt: "desc" }, 
@@ -163,9 +167,9 @@ try {
     skip: (page - 1) * pageSize,
     });
 
-    return news;
+return news;
 } catch (error) {
-    console.error("뉴스 더보기 로딩 실패:", error);
-    return [];
+console.error("뉴스 더보기 로딩 실패:", error);
+return [];
 }
 }
