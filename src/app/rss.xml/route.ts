@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-const BASE_URL = "https://www.trendit.ai.kr";
+const BASE_URL = "https://trendit.ai.kr";
 
 export async function GET() {
   // 최신 기사 100개 가져오기
