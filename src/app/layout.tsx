@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   },
   description: "가장 빠른 IT 뉴스, 실시간 앱 랭킹, AI 및 테크 트렌드 분석을 제공합니다.",
   keywords: ["IT뉴스", "테크", "AI", "앱랭킹", "스타트업", "트렌드IT", "TrendIT"],
+  
+  // 1. Open Graph 설정 (SNS 공유용)
   openGraph: {
     title: "트렌드IT - 기술의 흐름을 읽다",
     description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
@@ -33,28 +35,36 @@ export const metadata: Metadata = {
       },
     ],
   },
+
+  // 2. 트위터 카드 설정
+  twitter: {
+    card: "summary_large_image",
+    title: "트렌드IT - 대한민국 No.1 IT 뉴스",
+    description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
+    images: ["/logo.png"],
+  },
+
+  // 3. 파비콘 및 아이콘 설정
   icons: {
     icon: '/fabicon.ico',
     apple: '/fabicon.ico',
     shortcut: '/fabicon.ico',
   },
+
+  // 4. 검색 엔진 수집 설정
   robots: {
     index: true,
     follow: true,
   },
+
+  // 5. 검색 엔진 소유권 확인 (중요: 한 곳으로 통합)
   verification: {
+    // 구글 서치콘솔 코드가 있다면 여기에 입력하십시오.
     google: "구글-서치콘솔-코드-입력", 
     other: {
-      "naver-site-verification": "네이버-웹마스터도구-코드-입력",
+      // 이미지에서 확인된 네이버 코드를 정확히 반영했습니다.
+      "naver-site-verification": "a18f0d70591defda9dfe3ca13ffa3374d7f2e8ce",
     },
-  },
-
-  // ⭐ [추가] 트위터 카드 설정
-  twitter: {
-    card: "summary_large_image", // 이미지를 크게 보여줌
-    title: "트렌드IT - 대한민국 No.1 IT 뉴스",
-    description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
-    images: ["/logo.png"], // 대표 이미지
   },
 };
 
