@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.trendit.ai.kr"),
+  metadataBase: new URL("https://trendit.ai.kr"),
   title: {
     template: "%s | 트렌드IT",
     default: "트렌드IT - 대한민국 No.1 테크 뉴스 & 앱 랭킹",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "트렌드IT - 기술의 흐름을 읽다",
     description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
-    url: "https://www.trendit.ai.kr",
+    url: "https://trendit.ai.kr",
     siteName: "트렌드IT",
     locale: "ko_KR",
     type: "website",
