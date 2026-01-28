@@ -18,6 +18,23 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+
+  // 👇 SEO 최적화를 위한 www -> non-www 리다이렉트 설정
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.trendit.ai.kr',
+          },
+        ],
+        destination: 'https://trendit.ai.kr/:path*',
+        permanent: true, // 301 리다이렉트로 검색 엔진 점수를 trendit.ai.kr로 통합합니다.
+      },
+    ];
+  },
 };
 
 export default nextConfig;

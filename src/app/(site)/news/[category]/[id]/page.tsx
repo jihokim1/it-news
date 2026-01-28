@@ -96,7 +96,7 @@ const jsonLd = {
 "@type": "NewsArticle",
 "headline": news.title,
 "image": [
-    news.imageUrl || 'https://www.trendit.ai.kr/opengraph-image.png'
+    news.imageUrl || 'https://trendit.ai.kr/opengraph-image.png'
 ],
 "datePublished": news.createdAt.toISOString(),
 "dateModified": news.updatedAt.toISOString(), 
@@ -104,8 +104,17 @@ const jsonLd = {
 "author": [{
     "@type": "Person",
     "name": news.reporterName || "TrendIT 취재팀",
-    "url": "https://www.trendit.ai.kr"
-}]
+    "url": "https://trendit.ai.kr"
+}],
+
+"publisher": {
+"@type": "Organization",
+"name": "트렌드IT",
+"logo": {
+    "@type": "ImageObject",
+    "url": "https://trendit.ai.kr/logo.png" // 실제 박사님 사이트의 로고 경로
+}
+}
 };
 
 const breadcrumbLd = {
@@ -116,19 +125,19 @@ const breadcrumbLd = {
     "@type": "ListItem",
     "position": 1,
     "name": "홈",
-    "item": "https://www.trendit.ai.kr"
+    "item": "https://trendit.ai.kr"
     },
     {
     "@type": "ListItem",
     "position": 2,
     "name": news.category || "전체",
-    "item": `https://www.trendit.ai.kr/news/${news.category || "all"}`
+    "item": `https://trendit.ai.kr/news/${news.category || "all"}`
     },
     {
     "@type": "ListItem",
     "position": 3,
     "name": news.title,
-    "item": `https://www.trendit.ai.kr/news/${news.category}/${news.id}`
+    "item": `https://trendit.ai.kr/news/${news.category}/${news.id}`
     }
 ]
 };

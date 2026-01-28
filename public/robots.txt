@@ -3,4 +3,8 @@ Allow: /
 Disallow: /admin/  # 관리자 페이지는 검색되면 안 됨
 Disallow: /api/    # API도 굳이 긁어갈 필요 없음
 
-Sitemap: https://www.trendit.ai.kr/sitemap.xml
+# 표준 도메인 주소로 Sitemap 설정 (www 제거)
+Sitemap: https://trendit.ai.kr/sitemap.xml
+
+# Daum 웹마스터도구 PIN 인증 코드
+#DaumWebMasterTool:a9fa0d414f2cbc7c553f6c98057cba981e52505a9082dbe0c700cf98284e1660:5llCktz7ZGRLpLSfLaoo1w==
