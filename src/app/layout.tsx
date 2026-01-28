@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/layout/Footer";
+import Script from 'next/script';
 
 // ⚡ [유지] 이건 있어야 시간이 실시간으로 흐릅니다.
 export const dynamic = "force-dynamic";
@@ -82,6 +83,21 @@ export default function RootLayout({
         {children} {/* 여기에 메인 페이지(헤더 포함)가 들어옵니다 */}
 
         <Footer />
+        {/* 2. 네이버 애널리틱스 스크립트 추가 */}
+        <Script 
+          src="//wcs.pstatic.net/wcslog.js" 
+          strategy="afterInteractive" 
+        />
+        <Script id="naver-analytics" strategy="afterInteractive">
+          {`
+            if(!window.wcs) var wcs = {};
+            if(!window.wcs_add) var wcs_add = {};
+            wcs_add["wa"] = "169655d31a7a3d0";
+            if(window.wcs) {
+              wcs_do();
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
