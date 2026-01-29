@@ -85,23 +85,21 @@ export default function RootLayout({
 
         <Footer />
 
-       {/* --- 네이버 애널리틱스 (완전 통합형: 로딩 후 실행 보장) --- */}
-       <Script 
+        {/* --- 네이버 애널리틱스 --- */}
+        <Script 
           src="//wcs.pstatic.net/wcslog.js" 
-          strategy="afterInteractive"
-          onLoad={() => {
-            // wcslog.js 파일이 100% 로드된 직후에만 실행됩니다.
-            // @ts-ignore
-            if(!window.wcs_add) window.wcs_add = {};
-            // @ts-ignore
-            window.wcs_add["wa"] = "169655d31a7a3d0";
-            // @ts-ignore
-            if(window.wcs) {
-              // @ts-ignore
-              window.wcs_do();
-            }
-          }}
+          strategy="afterInteractive" 
         />
+        <Script id="naver-analytics" strategy="afterInteractive">
+          {`
+            if(!window.wcs) var wcs = {};
+            if(!window.wcs_add) var wcs_add = {};
+            wcs_add["wa"] = "169655d31a7a3d0";
+            if(window.wcs) {
+              wcs_do();
+            }
+          `}
+        </Script>
 
         {/* --- 구글 애널리틱스 (GA4) --- */}
         <Script
