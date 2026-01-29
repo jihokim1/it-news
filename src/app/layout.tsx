@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import Script from 'next/script';
+import NaverAnalytics from "@/components/NaverAnalytics";
 
 // ⚡ [유지] 이건 있어야 시간이 실시간으로 흐릅니다.
 export const dynamic = "force-dynamic";
@@ -86,20 +87,7 @@ export default function RootLayout({
         <Footer />
 
         {/* --- 네이버 애널리틱스 --- */}
-        <Script 
-          src="//wcs.pstatic.net/wcslog.js" 
-          strategy="afterInteractive" 
-        />
-        <Script id="naver-analytics" strategy="afterInteractive">
-          {`
-            if(!window.wcs) var wcs = {};
-            if(!window.wcs_add) var wcs_add = {};
-            wcs_add["wa"] = "169655d31a7a3d0";
-            if(window.wcs) {
-              wcs_do();
-            }
-          `}
-        </Script>
+        <NaverAnalytics />
 
         {/* --- 구글 애널리틱스 (GA4) --- */}
         <Script
