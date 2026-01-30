@@ -30,19 +30,24 @@ return (
     </button>
     </div>
 
-    {/* 🖥️ 사이드바 본체 (모바일: 슬라이드 메뉴 / 데스크톱: 고정 메뉴) */}
+    {/* 🖥️ 사이드바 본체 */}
     <aside className={`
     fixed inset-y-0 left-0 z-40 w-64 bg-[#0f172a] text-white transition-transform duration-300 ease-in-out flex flex-col
     ${isOpen ? "translate-x-0" : "-translate-x-full"} 
     md:relative md:translate-x-0 md:block
     `}>
-    <div className="p-6 flex-1">
+    
+    {/* 🟢 [수정됨] 모바일에서 상단 여백 추가 (pt-24)
+        - 모바일(기본): pt-24 (헤더 높이만큼 내용을 아래로 밈)
+        - PC(md): md:p-6 (원래 패딩으로 복귀)
+    */}
+    <div className="px-6 pb-6 pt-24 md:p-6 flex-1">
         {/* 데스크톱 로고 */}
         <h1 className="text-2xl font-black tracking-tighter mb-10 hidden md:block">TO.ADMIN</h1>
         
         <nav className="space-y-2">
         {menuItems.map((item) => {
-            // 현재 경로가 해당 메뉴의 경로를 포함하면 활성화 (예: /admin/news/write 도 뉴스 관리 활성화)
+            // 현재 경로가 해당 메뉴의 경로를 포함하면 활성화
             const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
             
             return (
