@@ -131,14 +131,30 @@ return (
 <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
     <div className="container mx-auto px-4 py-8 max-w-[1200px]">
 
-    {/* =====================================================================================
-        [섹션 1] 메인 헤드라인 (고정 배지 + 글래스모피즘 박스 적용)
+   {/* =====================================================================================
+        [섹션 1] 메인 헤드라인 (모바일 비율 최적화: 덜 잘리고 꽉 차게)
         ===================================================================================== */}
     <section className="mb-12 border-b border-gray-100 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[500px]">
             
             {/* 1-1. 왼쪽 메인 기사 (8칸) */}
-            <div className="lg:col-span-8 relative group h-[400px] lg:h-full rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
+            {/* 🟢 [수정됨] 높이 강제(75vh) 대신 안정적인 비율(4/3) 적용 */}
+            <div className="lg:col-span-8 relative group 
+                /* [모바일] */
+                aspect-[4/3] h-auto       /* 🟢 수정: 무작정 높이를 늘리지 않고 4:3 비율 유지 */
+                w-screen                  /* 부모 여백 무시하고 화면 너비 100% 강제 */
+                ml-[50%] -translate-x-1/2 /* 화면 중앙 정렬 (Full Bleed) */
+                -mt-8                     /* 위쪽 여백 상쇄해서 헤더에 붙임 */
+                
+                /* [PC (lg 이상)] */
+                lg:aspect-auto lg:h-full  /* PC에서는 비율 해제하고 부모 높이 따름 */
+                lg:w-full 
+                lg:ml-0 lg:translate-x-0  /* PC 복귀 */
+                lg:mt-0                   /* PC 여백 복귀 */
+                lg:rounded-3xl            /* PC 둥근 모서리 */
+                
+                overflow-hidden shadow-2xl shadow-blue-900/5">
+                
                 {mainHero ? (
                     <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full relative">
                         {/* 메인 이미지 */}
@@ -155,33 +171,37 @@ return (
                             <div className="w-full h-full bg-slate-800 flex items-center justify-center text-gray-500">NO IMAGE</div>
                         )}
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90" />
+                        {/* 그라데이션 */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90" />
                         
-                        {/* 글래스모피즘 박스 (요청하신 대로 슬림하게 수정됨) */}
-                        <div className="absolute bottom-0 left-0 w-full p-8 md:p-14">
-                            <div className="backdrop-blur-md bg-white/200 border border-white/20 rounded-2xl p-5 md:p-6 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                        {/* 텍스트 박스 */}
+                        <div className="absolute bottom-0 left-0 w-full p-6 md:p-14 pb-8">
+                            {/* 모바일: 배경 없이 글자만 / PC: 글래스 박스 */}
+                            <div className="lg:backdrop-blur-md lg:bg-white/20 lg:border lg:border-white/20 rounded-xl lg:rounded-2xl lg:p-6 lg:shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                                 <div className="flex items-center gap-3 mb-3">
                                     <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md shadow-blue-600/30">
                                         {mainHero.category || 'HEADLINE'}
                                     </span>
 
-                                    {/* 🔴 [고정 배지 복구] */}
                                     {/* @ts-ignore */}
                                     {mainHero.isPinned && (
                                         <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                        Main
-                                    </span>
-                                    )
-                                    }
+                                            Main
+                                        </span>
+                                    )}
 
                                     <span className="text-gray-300 text-xs font-medium border-l border-white/30 pl-3">
                                         {new Date(mainHero.publishedAt).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-3 drop-shadow-lg line-clamp-4 md:line-clamp-2 break-keep">
+                                
+                                {/* 제목 */}
+                                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-2 drop-shadow-lg line-clamp-3 break-keep">
                                         {mainHero.title}
-                                    </h1>
-                                <p className="text-gray-200 text-sm md:text-lg line-clamp-2 font-medium opacity-90 hidden md:block">
+                                </h1>
+                                
+                                {/* 요약 */}
+                                <p className="text-gray-300 text-sm md:text-lg line-clamp-1 md:line-clamp-2 font-medium opacity-90 block">
                                     {mainHero.summary}
                                 </p>
                             </div>
@@ -193,8 +213,8 @@ return (
             </div>
 
             {/* 1-2. 오른쪽 Trending Now (4칸) */}
-            <div className="lg:col-span-4 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-5 px-1">
+            <div className="lg:col-span-4 flex flex-col h-full mt-8 lg:mt-0 px-1">
+                <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2">
                         <div className="bg-red-100 p-1.5 rounded-lg">
                             <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
