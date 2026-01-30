@@ -142,7 +142,7 @@ return (
     className="fixed bottom-10 right-10 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center gap-2"
     title="사진 바로 추가 (에디터 기능 호출)"
     >
-    <span className="font-bold hidden md:inline">사진 추가</span>
+    <span className="font-bold hidden md:inline">이미지 추가</span>
     </button>
 
     <div className="w-full max-w-[1600px] flex flex-col lg:flex-row gap-6 items-start">
