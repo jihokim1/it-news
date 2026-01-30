@@ -48,9 +48,9 @@ export const metadata: Metadata = {
 
   // 3. 파비콘 및 아이콘 설정
   icons: {
-    icon: '/fabicon.ico',
-    apple: '/fabicon.ico',
-    shortcut: '/fabicon.ico',
+    icon: '/favicon.ico',
+    apple: '/favicon.ico',
+    shortcut: '/favicon.ico',
   },
 
   // 4. 검색 엔진 수집 설정
