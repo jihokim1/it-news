@@ -48,9 +48,13 @@ export const metadata: Metadata = {
 
   // 3. 파비콘 및 아이콘 설정
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
-    shortcut: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/logo.png', sizes: '32x32', type: 'image/png' }, // PNG 로고도 함께 명시
+    ],
+    apple: [
+      { url: '/logo.png' }, // 아이폰 홈 화면 추가 시 로고가 나오도록 설정
+    ],
   },
 
   // 4. 검색 엔진 수집 설정
