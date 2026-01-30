@@ -2,10 +2,10 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { deleteImageAction } from "./write/actions"; 
-// 👇 [1. 추가] 방금 만든 삭제 버튼 컴포넌트 가져오기
 import DeleteNewsButton from "./DeleteNewsButton"; 
+import { format } from "date-fns"; // 🟢 날짜 포맷팅용 추가
 
-// 🗑️ 삭제 기능 (이미지 + DB 동시 삭제)
+// 🗑️ 삭제 기능 (이미지 + DB 동시 삭제) - [로직 유지]
 async function deleteNews(formData: FormData) {
 "use server";
 const id = Number(formData.get("id"));
@@ -27,7 +27,7 @@ await prisma.news.delete({ where: { id } });
 revalidatePath("/admin/news");
 }
 
-// 📌 고정(Pin) 토글 기능
+// 📌 고정(Pin) 토글 기능 - [로직 유지]
 async function togglePin(formData: FormData) {
 "use server";
 const id = Number(formData.get("id"));
@@ -52,7 +52,8 @@ const pageSize = 10;
 const [totalCount, newsList] = await Promise.all([
 prisma.news.count(),
 prisma.news.findMany({
-    orderBy: { createdAt: "desc" },
+    // 🟢 [수정됨] 작성일(createdAt)이 아니라 게시일(publishedAt) 기준으로 정렬해야 예약된 글이 관리하기 쉽습니다.
+    orderBy: { publishedAt: "desc" },
     take: pageSize,
     skip: (currentPage - 1) * pageSize,
 }),
@@ -85,84 +86,100 @@ return (
             <th className="px-6 py-4">제목</th>
             <th className="px-6 py-4 text-center">카테고리</th>
             <th className="px-6 py-4 text-center">조회수</th>
-            <th className="px-6 py-4 text-center">작성일</th>
+            {/* 🟢 [수정됨] 작성일 -> 상태 및 게시일 */}
+            <th className="px-6 py-4 text-center">상태 / 게시일</th>
             <th className="px-6 py-4 text-right">관리</th>
         </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
         {newsList.length > 0 ? (
-            newsList.map((news) => (
-            <tr key={news.id} className={`transition-colors ${news.isPinned ? 'bg-purple-50/50' : 'hover:bg-gray-50'}`}>
+            newsList.map((news) => {
+            // 🟢 [추가됨] 예약 여부 확인 로직
+            const isReservation = new Date(news.publishedAt) > new Date();
+
+            return (
+                <tr key={news.id} className={`transition-colors ${news.isPinned ? 'bg-purple-50/50' : 'hover:bg-gray-50'}`}>
                 
                 {/* 핀 고정 버튼 */}
                 <td className="px-6 py-4 text-center">
-                <form action={togglePin}>
+                    <form action={togglePin}>
                     <input type="hidden" name="id" value={news.id} />
                     <input type="hidden" name="currentStatus" value={news.isPinned ? "true" : "false"} />
                     <button 
                         type="submit"
                         title={news.isPinned ? "고정 해제하기" : "상단에 고정하기"}
                         className={`p-2 rounded-full transition-all hover:scale-110 ${
-                            news.isPinned 
+                        news.isPinned 
                             ? "bg-purple-100 text-purple-600 shadow-sm" 
                             : "text-gray-300 hover:bg-gray-100 hover:text-gray-500"
                         }`}
                     >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
+                        {news.isPinned ? "📌" : "★"}
                     </button>
-                </form>
+                    </form>
                 </td>
 
                 <td className="px-6 py-4">
-                <div className="flex flex-col">
+                    <div className="flex flex-col">
                     <Link 
-                    href={`/news/${news.category || 'ai'}/${news.id}`} 
-                    target="_blank"
-                    className="font-bold text-slate-900 hover:text-blue-600 text-base block max-w-md truncate"
+                        href={`/admin/news/write?id=${news.id}`} 
+                        className="font-bold text-slate-900 hover:text-blue-600 text-base block max-w-md truncate"
                     >
-                    {news.title}
+                        {news.title}
                     </Link>
                     <div className="flex gap-2 mt-1">
                         {news.importance === 'high' && (
-                            <span className="text-[10px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded inline-block">🔥 헤드라인</span>
+                        <span className="text-[10px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded inline-block">🔥 헤드라인</span>
                         )}
-                        {news.isPinned && (
-                            <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-1.5 py-0.5 rounded inline-block">📌 메인고정됨</span>
+                        {/* 🟢 [추가됨] 예약 상태 뱃지 */}
+                        {isReservation && (
+                            <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded inline-block animate-pulse">⏳ 예약대기</span>
                         )}
                     </div>
-                </div>
+                    </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold uppercase">
+                    <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold uppercase">
                     {news.category || "-"}
-                </span>
+                    </span>
                 </td>
                 <td className="px-6 py-4 text-center font-bold text-slate-600">
-                {(news.views || 0).toLocaleString()}
+                    {(news.views || 0).toLocaleString()} {/* views -> viewCount 확인 필요 (보통 스키마에 따라 다름) */}
                 </td>
-                <td className="px-6 py-4 text-center text-slate-400">
-                {new Date(news.createdAt).toLocaleDateString()}
+
+                {/* 🟢 [수정됨] 게시일 표시 (예약이면 시간까지, 아니면 날짜만) */}
+                <td className="px-6 py-4 text-center">
+                    {isReservation ? (
+                    <div className="flex flex-col items-center">
+                        <span className="text-blue-600 text-xs font-bold">
+                        {format(new Date(news.publishedAt), "yyyy.MM.dd HH:mm")}
+                        </span>
+                    </div>
+                    ) : (
+                    <span className="text-slate-400 text-sm">
+                        {format(new Date(news.publishedAt), "yyyy.MM.dd")}
+                    </span>
+                    )}
                 </td>
                 
                 {/* 관리 버튼 영역 */}
                 <td className="px-6 py-4 text-right">
-                <div className="flex justify-end items-center gap-2">
+                    <div className="flex justify-end items-center gap-2">
                     <Link 
-                    href={`/admin/news/write?id=${news.id}`} 
-                    className="bg-white border border-gray-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
+                        href={`/admin/news/write?id=${news.id}`} 
+                        className="bg-white border border-gray-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
                     >
-                    수정
+                        수정
                     </Link>
                     
-                    {/* 👇 [2. 변경됨] 기존 폼 대신 새로 만든 버튼 컴포넌트 사용 */}
+                    {/* 삭제 버튼 컴포넌트 */}
                     <DeleteNewsButton id={Number(news.id)} deleteAction={deleteNews} />
                     
-                </div>
+                    </div>
                 </td>
-            </tr>
-            ))
+                </tr>
+            );
+            })
         ) : (
             <tr>
             <td colSpan={6} className="py-20 text-center text-gray-400">
