@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-const baseUrl = "https://www.trendit.ai.kr"; // 박사님 도메인
+const baseUrl = "https://trendit.ai.kr"; // 박사님 도메인
 
 // 1. 모든 뉴스 기사 가져오기 (최신 5000개 정도)
 const posts = await prisma.news.findMany({
