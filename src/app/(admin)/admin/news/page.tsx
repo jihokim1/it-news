@@ -95,7 +95,9 @@ return (
         {newsList.length > 0 ? (
             newsList.map((news) => {
             // 🟢 [추가됨] 예약 여부 확인 로직
-            const isReservation = new Date(news.publishedAt) > new Date();
+            const now = new Date();
+            const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // 서버 시간에 9시간 추가
+            const isReservation = new Date(news.publishedAt) > kstNow;
 
             return (
                 <tr key={news.id} className={`transition-colors ${news.isPinned ? 'bg-purple-50/50' : 'hover:bg-gray-50'}`}>
