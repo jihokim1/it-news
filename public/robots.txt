@@ -1,8 +1,13 @@
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+# 나머지 모든 로봇 설정 (박사님의 현재 설정 유지)
 User-agent: *
 Allow: /
-Disallow: /admin/  
-Disallow: /api/    
-
+Disallow: /admin/
+Disallow: /api/
 
 Sitemap: https://trendit.ai.kr/sitemap.xml
-
