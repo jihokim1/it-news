@@ -86,6 +86,8 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8F9FA] text-slate-900 antialiased font-sans`}>
       <head>
+
+      <meta name="google-adsense-account" content="ca-pub-3987387348804375" />
         {/* 구글 애드센스 스크립트 */}
         <Script
           async
@@ -93,6 +95,10 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive" // 페이지 로드 후 부드럽게 불러옵니다.
         />
+
+        {/* 3. Daum 웹마스터도구 인증 (robots.txt 대신 여기에 넣으세요) */}
+        {/* robots.txt에 있던 PIN 번호를 아래 content에 넣으시면 됩니다 */}
+        <meta name="daum-verification" content="a9fa0d414f2cbc7c553f6c98057cba981e52505a9082dbe0c700cf98284e1660:5llCktz7ZGRLpLSfLaoo1w==" />
       </head>
         {children}
 
