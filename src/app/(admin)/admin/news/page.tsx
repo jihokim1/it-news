@@ -151,13 +151,13 @@ return (
 
                 {/* 🟢 [수정됨] 게시일 표시 (예약이면 시간까지, 아니면 날짜만) */}
                 <td className="px-6 py-4 text-center">
-                    {isReservation ? (
-                    <div className="flex flex-col items-center">
-                        <span className="text-blue-600 text-xs font-bold">
+                {isReservation ? (
+                    // ✅ 예약 중일 때는 연.월.일 시:분 출력
+                    <span className="text-blue-600 text-xs font-bold">
                         {format(new Date(news.publishedAt), "yyyy.MM.dd HH:mm")}
-                        </span>
-                    </div>
+                    </span>
                     ) : (
+                    // ❌ 발행 완료되면 연.월.일만 출력 (시간이 생략됨)
                     <span className="text-slate-400 text-sm">
                         {format(new Date(news.publishedAt), "yyyy.MM.dd")}
                     </span>
