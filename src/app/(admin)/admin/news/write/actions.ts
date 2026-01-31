@@ -87,7 +87,7 @@ const publishedAtStr = formData.get("publishedAt") as string;
 
 // 👇 [2. 여기 추가] 값이 있으면 Date 변환, 없으면 현재 시간(즉시 발행)
 // 폼에서 값을 안 보내면 빈 문자열("")이 오므로, 이때는 new Date()가 됨
-const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date();
+const publishedAt = publishedAtStr ? new Date(`${publishedAtStr}:00+09:00`) : new Date();
 
 const finalImageUrl = thumbnailUrl || null;
 
