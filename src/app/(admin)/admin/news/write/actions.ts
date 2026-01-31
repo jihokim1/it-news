@@ -145,17 +145,22 @@ const pageSize = 20;
 // 카테고리 디코딩
 const decodedCategory = decodeURIComponent(category);
 
+const now = new Date();
+const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+
 // ⭐ [핵심 수정] 어떤 경우든 '현재 시간보다 이전에 발행된(lte)' 글만 가져오기
 const whereCondition = (category === "ALL")
 ? {
-    publishedAt: { lte: new Date() } // 전체보기: 예약글 제외
+    publishedAt: { lte: kstNow } // 전체보기: 예약글 제외
     }
 : {
     category: {
         contains: decodedCategory,
         mode: 'insensitive' as const,
     },
-    publishedAt: { lte: new Date() } // 카테고리별 보기: 예약글 제외
+
+    publishedAt: { lte: kstNow }
+    // publishedAt: { lte: new Date() } // 카테고리별 보기: 예약글 제외
     };
 
 try {
