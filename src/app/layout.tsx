@@ -85,7 +85,15 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8F9FA] text-slate-900 antialiased font-sans`}>
-        
+      <head>
+        {/* 구글 애드센스 스크립트 */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375"
+          crossOrigin="anonymous"
+          strategy="afterInteractive" // 페이지 로드 후 부드럽게 불러옵니다.
+        />
+      </head>
         {children}
 
         <Footer />
