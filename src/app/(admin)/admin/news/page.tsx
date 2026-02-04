@@ -38,6 +38,18 @@ data: { isPinned: !currentStatus },
 revalidatePath("/admin/news");
 }
 
+// 🟢 [핵심] 서버/로컬 상관없이 무조건 '한국 시간'으로 변환해주는 함수
+// 이 함수를 쓰면 배포 환경(UTC)에서도 한국 시간으로 고정됩니다.
+function formatToKST(dateInput: Date | string) {
+const date = new Date(dateInput);
+// 1. "Asia/Seoul" 타임존을 강제로 적용하여 문자열을 뽑습니다.
+const kstString = date.toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+// 2. 그 문자열을 다시 Date 객체로 만들면, 시스템은 이 시간을 '로컬 시간'인 것처럼 인식합니다.
+const kstDate = new Date(kstString);
+// 3. 이제 포맷팅을 하면 13:30이 04:30으로 바뀌지 않고 그대로 나옵니다.
+return format(kstDate, "yyyy.MM.dd HH:mm");
+}
+
 interface Props {
 searchParams: Promise<{ page?: string }>;
 }
@@ -90,12 +102,8 @@ return (
         <tbody className="divide-y divide-gray-100">
         {newsList.length > 0 ? (
             newsList.map((news) => {
-            // 1. 예약 상태 확인 (현재 시간과 비교)
+            // 1. 예약 상태 확인 (Date 객체끼리 비교는 타임존 상관없이 정확함)
             const isReservation = new Date(news.publishedAt) > new Date();
-
-            // 2. 🟢 [수정됨] 9시간 더하는 코드 삭제 (중복 계산 방지)
-            // 박사님 컴퓨터(서버)가 이미 한국 시간을 알고 있어서 그대로 쓰면 됩니다.
-            const publishedAt = new Date(news.publishedAt);
 
             return (
                 <tr key={news.id} className={`transition-colors ${news.isPinned ? 'bg-purple-50/50' : 'hover:bg-gray-50'}`}>
@@ -154,7 +162,7 @@ return (
                     {(news.views || 0).toLocaleString()}
                 </td>
 
-                {/* 🟢 [수정됨] 상태 / 게시일 표시 */}
+                {/* 🟢 [적용됨] formatToKST 함수로 시간 표시 */}
                 <td className="px-6 py-4 text-center">
                     {isReservation ? (
                     <div className="flex flex-col items-center gap-1">
@@ -162,12 +170,12 @@ return (
                         ⏳ 예약 대기
                         </span>
                         <span className="text-blue-600 font-bold text-sm font-mono">
-                        {format(publishedAt, "yyyy.MM.dd HH:mm")}
+                        {formatToKST(news.publishedAt)}
                         </span>
                     </div>
                     ) : (
                     <span className="text-slate-400 font-medium text-sm font-mono">
-                        {format(publishedAt, "yyyy.MM.dd")}
+                        {formatToKST(news.publishedAt)}
                     </span>
                     )}
                 </td>
