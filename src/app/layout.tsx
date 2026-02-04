@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://trendit.ai.kr"),
   title: {
     template: "%s | 트렌드IT",
-    default: "트렌드IT - 대한민국 No.1 테크 뉴스 & 앱 랭킹",
+    default: "트렌드IT - 대한민국 No.1 IT 뉴스 & 앱 랭킹",
   },
   description: "가장 빠른 IT 뉴스, 실시간 앱 랭킹, AI 및 테크 트렌드 분석을 제공합니다.",
   keywords: ["IT뉴스", "테크", "AI", "앱랭킹", "스타트업", "트렌드IT", "TrendIT"],
