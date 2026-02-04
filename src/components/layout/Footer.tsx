@@ -35,7 +35,7 @@ return (
           <p>
               <span className="font-bold text-gray-300">제호:</span> 트렌드IT (TrendIT) <span className="mx-2 text-gray-700">|</span> 
               <span className="font-bold text-gray-300">발행인·편집인:</span> 김지호 <span className="mx-2 text-gray-700">|</span> 
-              <span className="font-bold text-gray-300">청소년보호책임자:</span> 황선희
+              <span className="font-bold text-gray-300">청소년보호책임자:</span> 김지호
           </p>
           <p>
             <span className="font-bold text-gray-300">발행일:</span> 2026.01.01 <span className="mx-2 text-gray-700">|</span>
