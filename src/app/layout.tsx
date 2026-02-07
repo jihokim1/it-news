@@ -50,10 +50,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico' },
-      { url: '/logo.png', sizes: '32x32', type: 'image/png' }, // PNG 로고도 함께 명시
+      { url: '/logo.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/logo.png' }, // 아이폰 홈 화면 추가 시 로고가 나오도록 설정
+      { url: '/logo.png' },
     ],
   },
 
@@ -63,14 +63,17 @@ export const metadata: Metadata = {
     follow: true,
   },
 
-  // 5. 검색 엔진 소유권 확인 (중요: 한 곳으로 통합)
+  // 5. 검색 엔진 및 애드센스 소유권 확인 (통합 관리)
   verification: {
-    // 구글 서치콘솔 코드가 있다면 여기에 입력하십시오.
-    google: "구글-서치콘솔-코드-입력", 
     other: {
-      // 이미지에서 확인된 네이버 코드를 정확히 반영했습니다.
       "naver-site-verification": "a18f0d70591defda9dfe3ca13ffa3374d7f2e8ce",
     },
+  },
+
+  // 🟢 [추가됨] 여기에 넣어야 Next.js가 <head>에 예쁘게 넣어줍니다.
+  other: {
+    "google-adsense-account": "ca-pub-3987387348804375",
+    "daum-verification": "a9fa0d414f2cbc7c553f6c98057cba981e52505a9082dbe0c700cf98284e1660:5llCktz7ZGRLpLSfLaoo1w==",
   },
 };
 
@@ -85,21 +88,16 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8F9FA] text-slate-900 antialiased font-sans`}>
-      <head>
-
-      <meta name="google-adsense-account" content="ca-pub-3987387348804375" />
-        {/* 구글 애드센스 스크립트 */}
+        
+        {/* 구글 애드센스 자동 광고 스크립트 */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375"
           crossOrigin="anonymous"
-          strategy="afterInteractive" // 페이지 로드 후 부드럽게 불러옵니다.
+          strategy="afterInteractive"
         />
 
-        {/* 3. Daum 웹마스터도구 인증 (robots.txt 대신 여기에 넣으세요) */}
-        {/* robots.txt에 있던 PIN 번호를 아래 content에 넣으시면 됩니다 */}
-        <meta name="daum-verification" content="a9fa0d414f2cbc7c553f6c98057cba981e52505a9082dbe0c700cf98284e1660:5llCktz7ZGRLpLSfLaoo1w==" />
-      </head>
+        {/* 메인 콘텐츠 */}
         {children}
 
         <Footer />
