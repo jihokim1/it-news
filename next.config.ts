@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb', // 1MB 제한을 10MB로 늘려주는 설정
+      bodySizeLimit: '10mb', 
     },
   },
   typescript: {
@@ -11,26 +11,27 @@ const nextConfig: NextConfig = {
   },
   
   // 🟢 [이미지 설정 수정됨]
-  // Cloudinary와 Placeholder 도메인을 명시적으로 허용하여 엑박 문제를 해결합니다.
+  // Supabase와 Cloudinary 둘 다 허용하도록 설정했습니다.
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'res.cloudinary.com', // 👈 클라우디너리 이미지 필수 허용
-        pathname: '**',
+        hostname: '**.supabase.co', // 👈 Supabase 스토리지 허용 (핵심)
       },
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
-        pathname: '**',
+        hostname: 'res.cloudinary.com', // Cloudinary 허용 (혹시 몰라 유지)
       },
-      // 👇 기존에 쓰시던 '모든 사이트 허용'도 혹시 몰라 유지했습니다 (다른 뉴스 썸네일용)
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com', // 임시 이미지 허용
+      },
+      // 👇 기존의 '모든 사이트 허용'도 안전장치로 유지
       { protocol: "https", hostname: "**" },
       { protocol: "http", hostname: "**" },
     ],
   },
 
-  // SEO 최적화를 위한 www -> non-www 리다이렉트 설정
   async redirects() {
     return [
       {
