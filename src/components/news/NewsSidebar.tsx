@@ -26,7 +26,7 @@ return (
     {/* 1. 🔥 많이 본 뉴스 */}
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <h3 className="font-black text-lg text-slate-900 mb-5 pb-3 border-b border-gray-100">
-        많이 본 뉴스 (최근 5일)
+        많이 본 뉴스
       </h3>
       <div className="flex flex-col gap-4">
         {popularNews.length > 0 ? (
