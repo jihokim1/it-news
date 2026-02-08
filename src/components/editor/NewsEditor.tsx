@@ -5,6 +5,48 @@ import { useMemo, useRef, useEffect } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { uploadImageAction } from "@/app/(admin)/admin/news/write/actions";
 
+
+// ✅ WebP 변환 유틸리티 함수
+const convertToWebP = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        
+        if (!ctx) {
+            reject(new Error("Canvas context error"));
+            return;
+        }
+
+        ctx.drawImage(img, 0, 0);
+        
+        // 0.8은 퀄리티(80%) 설정입니다. 필요에 따라 조절하세요.
+        canvas.toBlob((blob) => {
+            if (blob) {
+                const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                    type: "image/webp",
+                    lastModified: Date.now(),
+                });
+                resolve(newFile);
+            } else {
+                reject(new Error("WebP conversion failed"));
+            }
+        }, "image/webp", 0.8); 
+      };
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 // 👇 [핵심 수정] 한글 깨짐 방지 로직 적용
 const ReactQuill = dynamic(async () => {
   const { default: RQ, Quill } = await import("react-quill-new");
@@ -109,9 +151,16 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
       if (!file) return;
 
       try {
+        // ✅ [수정됨] 원본 파일을 WebP로 변환
+        // console.log("변환 전:", file.size); // 디버깅용
+        const webpFile = await convertToWebP(file);
+        // console.log("변환 후:", webpFile.size); // 디버깅용
+
         const formData = new FormData();
-        formData.append("file", file);
-        const publicUrl = await uploadImageAction(formData);
+        formData.append("file", webpFile); // 변환된 파일(webpFile)을 전송
+
+        // 기존 로직 유지
+        const publicUrl = await uploadImageAction(formData); // 서버 액션은 WebP를 받게 됩니다.
         onImageUpload(publicUrl);
 
         const quill = quillRef.current?.getEditor();
@@ -120,14 +169,12 @@ export default function NewsEditor({ value, onChange, onImageUpload }: EditorPro
         const range = quill.getSelection(true);
         const index = range ? range.index : quill.getLength();
 
-        // 이미지 삽입 (캡션은 빈 상태로 시작)
         quill.insertEmbed(index, "imageCaption", { url: publicUrl, caption: "" });
         
-        // 커서를 이미지 다음으로 강제 이동
         setTimeout(() => { quill.setSelection(index + 1); }, 50);
       } catch (e) {
         console.error(e);
-        alert("업로드 실패");
+        alert("이미지 변환 또는 업로드 실패");
       }
     };
   };

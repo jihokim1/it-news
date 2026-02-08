@@ -4,8 +4,6 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation"; 
 import { saveNews, deleteImageAction, getNewsById, uploadImageAction } from "@/app/(admin)/admin/news/write/actions";
 import dynamicLoader from "next/dynamic";
-// 🟢 [추가됨] 이미지 압축 및 WebP 변환을 위한 라이브러리
-import imageCompression from "browser-image-compression";
 
 // ✅ 에디터 로딩 최적화
 const NewsEditor = dynamicLoader(
@@ -88,40 +86,6 @@ const preventSubmitOnEnter = (e: React.KeyboardEvent) => {
 if (e.key === "Enter") e.preventDefault();
 };
 
-// 🟢 [추가됨] 이미지를 WebP로 압축해서 업로드하는 핵심 함수
-const handleCompressAndUpload = async (file: File) => {
-try {
-    // 1. 압축 옵션 설정 (WebP 변환, 최대 너비 1200px, 품질 자동 조절)
-    const options = {
-    maxSizeMB: 0.5, // 0.5MB 이하로 줄이기 (SEO & 속도 최적화)
-    maxWidthOrHeight: 1200, // 너비 1200px로 리사이징
-    useWebWorker: true,
-    fileType: "image/webp" // 🟢 강제로 WebP로 변환 (용량 절약)
-    };
-
-    // 2. 브라우저에서 압축 진행
-    const compressedFile = await imageCompression(file, options);
-    
-    // 3. 파일명도 .webp로 변경 (한글 파일명 문제 원천 차단)
-    const safeName = `news_${Date.now()}.webp`; 
-    const finalFile = new File([compressedFile], safeName, { type: "image/webp" });
-
-    // 4. 서버로 업로드 (기존 로직 재활용)
-    const formData = new FormData();
-    formData.append("file", finalFile);
-    
-    const result = await uploadImageAction(formData);
-    if (result.success && result.url) {
-    handleImageUploaded(result.url);
-    } else {
-    alert("이미지 업로드 실패: " + result.error);
-    }
-} catch (error) {
-    console.error("이미지 압축 실패:", error);
-    alert("이미지 변환 중 오류가 발생했습니다.");
-}
-};
-
 const handleImageUploaded = (url: string) => {
 setGallery((prev) => [url, ...prev]);
 setSelectedThumbnail((prev) => (prev ? prev : url));
@@ -156,18 +120,14 @@ if (selected) {
 }
 };
 
-// 플로팅 버튼 클릭 -> 🟢 [수정됨] 에디터 버튼이 아니라 우리가 만든 숨겨진 input을 클릭하게 변경
+// 플로팅 버튼 클릭 -> 에디터 내부 이미지 버튼 클릭 유도
 const triggerEditorImageButton = () => {
-fileInputRef.current?.click();
-};
-
-// 🟢 [추가됨] 파일 선택 시 실행되는 함수 (압축 후 업로드)
-const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-if (e.target.files && e.target.files[0]) {
-    await handleCompressAndUpload(e.target.files[0]);
+const editorImageBtn = document.querySelector('.ql-image');
+if (editorImageBtn) {
+    (editorImageBtn as HTMLElement).click();
+} else {
+    alert("에디터가 로딩되지 않았거나 이미지 버튼을 찾을 수 없습니다.");
 }
-// 입력창 초기화 (같은 파일 다시 선택 가능하게)
-e.target.value = ""; 
 };
 
 if (loading) return <div className="p-10 text-center font-bold text-gray-500">데이터 로딩중...</div>;
@@ -175,24 +135,14 @@ if (loading) return <div className="p-10 text-center font-bold text-gray-500">�
 return (
 <div className="min-h-screen bg-[#F8F9FA] font-sans p-4 md:p-6 flex justify-center relative">
     
-    {/* 🟢 [추가됨] 숨겨진 파일 입력창 (압축 업로드용) */}
-    <input 
-    type="file" 
-    ref={fileInputRef} 
-    onChange={onFileChange} 
-    accept="image/*" 
-    className="hidden" 
-    />
-
     {/* 우측 하단 플로팅 사진 추가 버튼 */}
     <button 
     type="button"
     onClick={triggerEditorImageButton}
     className="fixed bottom-10 right-10 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center gap-2"
-    title="사진 바로 추가 (자동 WebP 변환)"
+    title="사진 바로 추가 (에디터 기능 호출)"
     >
-    <span className="text-2xl">📷</span>
-    <span className="font-bold hidden md:inline">사진 추가</span>
+    <span className="font-bold hidden md:inline">이미지 추가</span>
     </button>
 
     <div className="w-full max-w-[1600px] flex flex-col lg:flex-row gap-6 items-start">
@@ -219,12 +169,12 @@ return (
 
             <label className={`md:ml-2 px-4 py-2 text-sm rounded-lg cursor-pointer border transition-all flex items-center gap-1 ${isPinned ? 'bg-purple-50 border-purple-200 text-purple-700 font-bold shadow-inner' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                 <input 
-                type="checkbox" 
-                className="hidden" 
-                checked={isPinned} 
-                onChange={(e) => {
+                    type="checkbox" 
+                    className="hidden" 
+                    checked={isPinned} 
+                    onChange={(e) => {
                     setIsPinned(e.target.checked);
-                }} 
+                    }} 
                 />
                 <span>📌 헤드라인 고정</span>
             </label>
@@ -251,42 +201,42 @@ return (
                 
                 {/* 토글 스위치 */}
                 <div className="flex items-center gap-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                    type="checkbox" 
-                    checked={isReservation} 
-                    onChange={(e) => setIsReservation(e.target.checked)} 
-                    className="sr-only peer" 
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span className="ml-3 text-sm font-bold text-gray-700">
-                    {isReservation ? "예약 발행 ON" : "즉시 발행"}
-                    </span>
-                </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={isReservation} 
+                            onChange={(e) => setIsReservation(e.target.checked)} 
+                            className="sr-only peer" 
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span className="ml-3 text-sm font-bold text-gray-700">
+                            {isReservation ? "예약 발행 ON" : "즉시 발행"}
+                        </span>
+                    </label>
                 </div>
 
                 {/* 날짜 입력창 (토글 ON일 때만 등장) */}
                 {isReservation && (
-                <div className="flex items-center gap-2 animate-fadeInLeft transition-all duration-300">
-                    <span className="hidden md:inline text-gray-300 mx-2">|</span>
-                    <div className="relative">
-                    {/* 달력 아이콘 */}
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <div className="flex items-center gap-2 animate-fadeInLeft transition-all duration-300">
+                        <span className="hidden md:inline text-gray-300 mx-2">|</span>
+                        <div className="relative">
+                            {/* 달력 아이콘 */}
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input 
+                                type="datetime-local" 
+                                name="publishedAt"
+                                step="60" // 1분 단위
+                                required={isReservation}
+                                defaultValue={new Date(Date.now() + 9 * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString().slice(0, 16)} 
+                                className="pl-10 pr-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm"
+                            />
+                        </div>
+                        <p className="text-xs text-blue-600 font-medium whitespace-nowrap hidden lg:block">
+                            * 설정된 시간에 자동으로 공개됩니다.
+                        </p>
                     </div>
-                    <input 
-                        type="datetime-local" 
-                        name="publishedAt"
-                        step="60" // 1분 단위
-                        required={isReservation}
-                        defaultValue={new Date(Date.now() + 9 * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString().slice(0, 16)} 
-                        className="pl-10 pr-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm"
-                    />
-                    </div>
-                    <p className="text-xs text-blue-600 font-medium whitespace-nowrap hidden lg:block">
-                    * 설정된 시간에 자동으로 공개됩니다.
-                    </p>
-                </div>
                 )}
             </div>
             </div>
@@ -323,16 +273,15 @@ return (
             border-bottom: 1px solid #e5e7eb;
             }
             @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
+                from { opacity: 0; transform: translateX(-10px); }
+                to { opacity: 1; transform: translateX(0); }
             }
             .animate-fadeInLeft {
-            animation: fadeInLeft 0.3s ease-out forwards;
+                animation: fadeInLeft 0.3s ease-out forwards;
             }
         `}</style>
 
         <div className="border-t border-gray-100 pt-6">
-            {/* 🟢 [수정됨] onImageUpload 함수를 직접 전달하여 에디터 내부의 이미지 추가 로직과 연결 */}
             <NewsEditor value={content} onChange={setContent} onImageUpload={handleImageUploaded} />
         </div>
 
@@ -373,7 +322,7 @@ return (
         </div>
         </div>
     </aside>
-    </div>
+</div>
 </div>
 );
 }
@@ -381,7 +330,7 @@ return (
 export default function WritePage() {
 return (
 <Suspense fallback={<div className="p-10 text-center font-bold">로딩중...</div>}>
-    <WriteForm />
+<WriteForm />
 </Suspense>
 );
 }

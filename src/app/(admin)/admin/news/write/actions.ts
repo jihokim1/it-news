@@ -47,34 +47,25 @@ return { success: false, error: "서버 오류 발생" };
 }
 }
 
-// 3. 이미지 업로드 액션 (에디터용) - 🟢 [수정됨] 반환 타입을 객체로 변경하여 오류 해결
+// 3. 이미지 업로드 액션 (에디터용)
 export async function uploadImageAction(formData: FormData) {
-try {
 const file = formData.get("file") as File;
-if (!file) return { success: false, error: "파일 없음" };
+if (!file) throw new Error("파일 없음");
 
 const fileExt = file.name.split(".").pop();
-// 박사님 기존 로직 유지 (랜덤 파일명 생성)
 const fileName = `editor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
 const { error } = await supabase.storage
-    .from("news-images")
-    .upload(fileName, Buffer.from(await file.arrayBuffer()), {
+.from("news-images")
+.upload(fileName, Buffer.from(await file.arrayBuffer()), {
     contentType: file.type,
     upsert: false,
-    });
+});
 
-if (error) return { success: false, error: error.message };
+if (error) throw new Error(error.message);
 
 const { data } = supabase.storage.from("news-images").getPublicUrl(fileName);
-
-// 🟢 [핵심] 클라이언트가 기대하는 형태({ success: true, url: ... })로 반환
-return { success: true, url: data.publicUrl };
-
-} catch (error) {
-console.error("업로드 오류:", error);
-return { success: false, error: "업로드 중 오류가 발생했습니다." };
-}
+return data.publicUrl;
 }
 
 // 4. 기사 저장/수정 통합 액션
@@ -179,7 +170,7 @@ const news = await prisma.news.findMany({
     orderBy: { publishedAt: "desc" }, 
     take: pageSize,
     skip: (page - 1) * pageSize,
-});
+    });
 
 return news;
 } catch (error) {
