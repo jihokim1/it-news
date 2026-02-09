@@ -4,9 +4,9 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 import Image from "next/image";
 
 /* DB 실시간 반영 설정 */
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+// export const revalidate = 0;
 
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
