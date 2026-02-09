@@ -8,6 +8,13 @@ import Image from "next/image";
 // export const fetchCache = "force-no-store";
 // export const revalidate = 0;
 
+const getOptimizedUrl = (url: string, width: number) => {
+    if (!url) return "";
+    if (url.endsWith(".webp")) return url; // 이미 WebP면 통과
+    // wsrv.nl을 통해 리사이징 + WebP 변환 + 품질 80% 적용
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp&q=80`;
+  };
+
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
   { id: "IT", label: "IT" },
@@ -79,7 +86,7 @@ export default async function HomePage() {
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
             <Image
-            src={item.imageUrl}
+            src={getOptimizedUrl(item.imageUrl, 300)}
             alt={item.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -198,8 +205,8 @@ export default async function HomePage() {
                             <Link href={`/news/${item.category || 'AI'}/${item.id}`} className="flex gap-4 items-start w-full h-full">
                                 <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                                     {item.imageUrl && (
-                                        <Image 
-                                            src={item.imageUrl} 
+                                        <Image
+                                        src={getOptimizedUrl(item.imageUrl, 300)}
                                             alt={item.title} 
                                             fill
                                             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -243,7 +250,7 @@ export default async function HomePage() {
                     <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
                         <Image
-                            src={item.imageUrl}
+                        src={getOptimizedUrl(item.imageUrl, 300)}
                             alt={item.title}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
