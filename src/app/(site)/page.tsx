@@ -4,10 +4,11 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 import Image from "next/image";
 
 /* DB 실시간 반영 설정 */
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-// export const revalidate = 0;
+// export const dynamic = "force-dynamic"; // ❌ 삭제 (캐싱 적용)
+// export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
+export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
+// 🟢 [추가] 무료 이미지 압축 함수 (wsrv.nl 사용)
 const getOptimizedUrl = (url: string, width: number) => {
     if (!url) return "";
     if (url.endsWith(".webp")) return url; // 이미 WebP면 통과
@@ -86,7 +87,8 @@ export default async function HomePage() {
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
             <Image
-            src={getOptimizedUrl(item.imageUrl, 300)}
+            // 🟢 [수정] 압축 함수 적용 (200px)
+            src={getOptimizedUrl(item.imageUrl, 200)}
             alt={item.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -132,7 +134,8 @@ export default async function HomePage() {
                     <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full relative">
                         {mainHero.imageUrl ? (
                             <Image 
-                                src={mainHero.imageUrl} 
+                                // 🟢 [수정] 압축 함수 적용 (800px)
+                                src={getOptimizedUrl(mainHero.imageUrl, 800)}
                                 alt={mainHero.title} 
                                 fill
                                 priority={true} 
@@ -205,8 +208,9 @@ export default async function HomePage() {
                             <Link href={`/news/${item.category || 'AI'}/${item.id}`} className="flex gap-4 items-start w-full h-full">
                                 <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                                     {item.imageUrl && (
-                                        <Image
-                                        src={getOptimizedUrl(item.imageUrl, 300)}
+                                        <Image 
+                                            // 🟢 [수정] 압축 함수 적용 (200px)
+                                            src={getOptimizedUrl(item.imageUrl, 200)}
                                             alt={item.title} 
                                             fill
                                             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -250,7 +254,8 @@ export default async function HomePage() {
                     <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
                         <Image
-                        src={getOptimizedUrl(item.imageUrl, 300)}
+                            // 🟢 [수정] 압축 함수 적용 (300px)
+                            src={getOptimizedUrl(item.imageUrl, 300)}
                             alt={item.title}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -287,7 +292,8 @@ export default async function HomePage() {
                                 <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                                 {mainCatNews.imageUrl && (
                                     <Image
-                                    src={mainCatNews.imageUrl}
+                                    // 🟢 [수정] 압축 함수 적용 (500px)
+                                    src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                     alt={mainCatNews.title}
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -332,7 +338,8 @@ export default async function HomePage() {
                             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
                                 {main.imageUrl && (
                                 <Image
-                                    src={main.imageUrl}
+                                    // 🟢 [수정] 압축 함수 적용 (500px)
+                                    src={getOptimizedUrl(main.imageUrl, 500)}
                                     alt={main.title}
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -383,7 +390,8 @@ export default async function HomePage() {
                         <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
                             <Image
-                                src={mainCatNews.imageUrl}
+                                // 🟢 [수정] 압축 함수 적용 (500px)
+                                src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                 alt={mainCatNews.title}
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
