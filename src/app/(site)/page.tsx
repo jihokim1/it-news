@@ -78,13 +78,15 @@ export default async function HomePage() {
     <Link href={`/news/${item.category}/${item.id}`} className="flex gap-3 group items-start">
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
-          <Image
+            <Image
             src={item.imageUrl}
             alt={item.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
             sizes="(max-width: 768px) 100px, 120px"
-          />
+            loading="lazy"    // 👈 추가
+            decoding="async"  // 👈 추가
+            />
         )}
       </div>
       <div className="flex-1 min-w-0 flex flex-col justify-center h-full py-0.5">
@@ -202,6 +204,8 @@ export default async function HomePage() {
                                             fill
                                             className="object-cover group-hover:scale-110 transition-transform duration-500"
                                             sizes="128px"
+                                            loading="lazy"    // 👈 추가
+                                            decoding="async"  // 👈 추가
                                         />
                                     )}
                                 </div>
@@ -244,6 +248,8 @@ export default async function HomePage() {
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                             sizes="(max-width: 768px) 50vw, 25vw"
+                            loading="lazy"    // 👈 추가
+                            decoding="async"  // 👈 추가
                         />
                         )}
                     </div>
@@ -279,6 +285,8 @@ export default async function HomePage() {
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     sizes="(max-width: 768px) 100vw, 50vw"
+                                    loading="lazy"    // 👈 추가
+                                    decoding="async"  // 👈 추가
                                     />
                                 )}
                                 </div>
@@ -322,6 +330,8 @@ export default async function HomePage() {
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     sizes="(max-width: 768px) 100vw, 50vw"
+                                    loading="lazy"    // 👈 추가
+                                    decoding="async"  // 👈 추가
                                 />
                                 )}
                             </div>
@@ -371,6 +381,8 @@ export default async function HomePage() {
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                                 sizes="(max-width: 768px) 100vw, 50vw"
+                                loading="lazy"    // 👈 추가
+                                decoding="async"  // 👈 추가
                             />
                             )}
                         </div>
