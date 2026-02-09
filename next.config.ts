@@ -16,8 +16,8 @@ const nextConfig: NextConfig = {
     unoptimized: true, // 👈 [필수] 이걸 켜야 Vercel이 카운팅을 안 합니다. (무제한 무료)
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.supabase.co', // 👈 박사님이 쓰시는 Supabase 스토리지 허용
+        protocol: "https",
+        hostname: "**", // 모든 외부 이미지 허용
       },
       {
         protocol: 'https',
