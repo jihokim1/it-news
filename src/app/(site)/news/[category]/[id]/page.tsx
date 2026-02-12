@@ -114,6 +114,11 @@ safeContent = safeContent.replace(/^(<p>\s*<br\s*\/?>\s*<\/p>)+/gi, '');
 safeContent = safeContent.replace(/^(<p>\s*<\/p>)+/gi, '');
 safeContent = safeContent.replace(/contenteditable="true"/g, 'contenteditable="false"');
 
+// ✅ [여기를 추가하세요] 6. 문장 중간에 낀 강제 줄바꿈(<br>)과 엔터(\n) 삭제
+// 설명: <br> 태그나 엔터 기호가 있으면 그냥 띄어쓰기 한 칸으로 바꿉니다.
+safeContent = safeContent.replace(/<br\s*\/?>/gi, ' '); 
+safeContent = safeContent.replace(/\n/g, ' ');
+
 // ---------------------------------------------------------------------------
 // [SEO 데이터] 검색엔진용 구조화 데이터 (JSON-LD) 생성
 // ---------------------------------------------------------------------------
@@ -340,7 +345,10 @@ return (
         line-height: 1.65;
         letter-spacing: -0.01em;
         color: #333;
-        word-break: break-word;
+        /* ✅ [핵심 처방] 이 두 줄이 박사님이 원하는 '꽉 찬 네모'를 만듭니다 */
+        text-align: justify;    /* 양쪽 끝 맞춤 */
+        word-break: break-all;  /* 단어 잘림 허용 (대신 단어 사이 구멍 안 생김) */
+
     }
 
     /* 원래 입력창은 숨김 */
