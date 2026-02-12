@@ -340,14 +340,7 @@ return (
         line-height: 1.65;
         letter-spacing: -0.01em;
         color: #333;
-        /* ✅ 핵심 수정: 단어 단위로 줄바꿈 */
-        word-break: keep-all;      
-        
-        /* ✅ 긴 URL 등은 뚫고 나가지 않게 강제 줄바꿈 허용 */
-        overflow-wrap: break-word; 
-
-        /* (선택사항) 양쪽 정렬을 하면 신문 기사처럼 더 깔끔해집니다 */
-        text-align: justify;
+        word-break: break-word;
     }
 
     /* 원래 입력창은 숨김 */
