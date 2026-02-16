@@ -38,16 +38,19 @@ twitter: {
 };
 }
 
-// 🟢 [수정됨] 시간과 분이 나오도록 포맷 변경
+/// 🟢 [수정됨] Vercel 서버(UTC) 시간에 9시간을 더해 한국 시간(KST)으로 강제 변환
 const formatDate = (date: Date | string) => {
-const d = new Date(date);
-const year = d.getFullYear();
-const month = String(d.getMonth() + 1).padStart(2, "0");
-const day = String(d.getDate()).padStart(2, "0");
-const hours = String(d.getHours()).padStart(2, "0");
-const minutes = String(d.getMinutes()).padStart(2, "0");
-return `${year}.${month}.${day} ${hours}:${minutes}`;
-};
+    const d = new Date(date);
+    const kstTime = new Date(d.getTime() + 9 * 60 * 60 * 1000); // 9시간 추가
+  
+    const year = kstTime.getUTCFullYear();
+    const month = String(kstTime.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(kstTime.getUTCDate()).padStart(2, "0");
+    const hours = String(kstTime.getUTCHours()).padStart(2, "0");
+    const minutes = String(kstTime.getUTCMinutes()).padStart(2, "0");
+  
+    return `${year}.${month}.${day} ${hours}:${minutes}`;
+  };
 
 // =============================================================================
 // 2. 기사 상세 페이지 메인 컴포넌트 시작
