@@ -38,9 +38,15 @@ twitter: {
 };
 }
 
+// 🟢 [수정됨] 시간과 분이 나오도록 포맷 변경
 const formatDate = (date: Date | string) => {
 const d = new Date(date);
-return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+const year = d.getFullYear();
+const month = String(d.getMonth() + 1).padStart(2, "0");
+const day = String(d.getDate()).padStart(2, "0");
+const hours = String(d.getHours()).padStart(2, "0");
+const minutes = String(d.getMinutes()).padStart(2, "0");
+return `${year}.${month}.${day} ${hours}:${minutes}`;
 };
 
 // =============================================================================
@@ -132,7 +138,7 @@ const jsonLd = {
 "image": [
     news.imageUrl || 'https://trendit.ai.kr/opengraph-image.png'
 ],
-"datePublished": news.createdAt.toISOString(),
+"datePublished": news.publishedAt.toISOString(), // 🟢 여기도 publishedAt으로 맞춤
 "dateModified": news.updatedAt.toISOString(), 
 "description": news.summary || news.title,
 "author": [{
@@ -228,8 +234,9 @@ return (
                 <div className="flex justify-between items-end text-gray-400 text-xs md:text-sm pt-2">
                     <span>
                         {news.reporterName || "이정혁 기자"} ·{" "}
-                        <time dateTime={news.createdAt.toISOString()} itemProp="datePublished">
-                            {formatDate(news.createdAt)}
+                        {/* 🟢 [수정됨] createdAt 대신 예약된 시간인 publishedAt을 출력하도록 수정 */}
+                        <time dateTime={news.publishedAt.toISOString()} itemProp="datePublished">
+                            {formatDate(news.publishedAt)}
                         </time>
                     </span>
                 </div>
