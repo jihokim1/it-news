@@ -338,8 +338,8 @@ return (
         {/* ---------------------------------------------------------------- */}
         {/* (2) 사이드바 영역 (우측) */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="lg:col-span-1 px-5 md:px-0">
-            <NewsSidebar />
+        <aside className="lg:col-span-1 lg:sticky lg:top-8 lg:self-start lg:h-fit z-10">
+    <NewsSidebar />
         </aside>
 
     </div>

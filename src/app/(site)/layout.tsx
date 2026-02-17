@@ -6,8 +6,8 @@ children,
 children: React.ReactNode;
 }) {
 return (
-// 🟢 [핵심 수정] overflow-x-hidden과 w-full을 추가하여 사이트 내부 가로 스크롤만 방지합니다.
-<div className="relative min-h-screen flex flex-col overflow-x-hidden w-full">
+// 🟢 [핵심 수정] sticky 고장을 일으키는 주범인 'overflow-x-hidden'을 과감히 삭제했습니다.
+<div className="relative min-h-screen flex flex-col w-full">
     {/* 헤더는 여기서 보여줍니다 */}
     <Header />
     
