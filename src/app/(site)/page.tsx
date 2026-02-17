@@ -8,11 +8,11 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 // export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
 export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
-// 🟢 [최종 수정] Vercel 최적화 한도 에러 및 외부망 딜레이를 완벽히 회피하기 위한 직통 연결
+// 🟢 [최종 수정] Vercel 최적화 한도 초과 회피 및 스크롤 렉(딜레이) 제거를 위한 스토리지 직통 연결
 const getOptimizedUrl = (url: string, width?: number) => {
-    if (!url) return "";
-    return url; // 변환/압축 등의 딜레이 유발 요소를 모두 제거하고 스토리지 원본 URL을 즉시 반환
-  };
+  if (!url) return "";
+  return url; // 변환/압축을 거치지 않고 원본 URL을 즉시 반환하여 가장 빠른 로딩 속도 확보
+};
 
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
@@ -89,7 +89,7 @@ export default async function HomePage() {
           // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            // 🟢 [수정] 압축 함수 적용 (200px)
+            // 🟢 [수정] 압축 함수 통과 (실제로는 직통 반환)
             src={getOptimizedUrl(item.imageUrl, 200)}
             alt={item.title}
             width={200}  // 🟢 [추가] 3:2 비율 가로
@@ -139,7 +139,7 @@ export default async function HomePage() {
                     // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img 
-                      // 🟢 [수정] 압축 함수 적용 (800px)
+                      // 🟢 [수정] 압축 함수 통과
                       src={getOptimizedUrl(mainHero.imageUrl, 800)}
                       alt={mainHero.title} 
                       width={800}  // 🟢 [추가] 4:3 비율 가로
@@ -216,7 +216,7 @@ export default async function HomePage() {
                           // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img 
-                            // 🟢 [수정] 압축 함수 적용 (200px)
+                            // 🟢 [수정] 압축 함수 통과
                             src={getOptimizedUrl(item.imageUrl, 200)}
                             alt={item.title} 
                             width={200}  // 🟢 [추가] 4:3 비율 가로
@@ -264,7 +264,7 @@ export default async function HomePage() {
                         // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
-                          // 🟢 [수정] 압축 함수 적용 (300px)
+                          // 🟢 [수정] 압축 함수 통과
                           src={getOptimizedUrl(item.imageUrl, 300)}
                           alt={item.title}
                           width={300}  // 🟢 [추가] 16:10 비율 가로
@@ -305,7 +305,7 @@ export default async function HomePage() {
                               // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img
-                                // 🟢 [수정] 압축 함수 적용 (500px)
+                                // 🟢 [수정] 압축 함수 통과
                                 src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                 alt={mainCatNews.title}
                                 width={500}  // 🟢 [추가] 16:9 비율 가로
@@ -354,7 +354,7 @@ export default async function HomePage() {
                             // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
-                              // 🟢 [수정] 압축 함수 적용 (500px)
+                              // 🟢 [수정] 압축 함수 통과
                               src={getOptimizedUrl(main.imageUrl, 500)}
                               alt={main.title}
                               width={500}  // 🟢 [추가] 16:9 비율 가로
@@ -409,7 +409,7 @@ export default async function HomePage() {
                             // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
-                              // 🟢 [수정] 압축 함수 적용 (500px)
+                              // 🟢 [수정] 압축 함수 통과
                               src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                               alt={mainCatNews.title}
                               width={500}  // 🟢 [추가] 16:9 비율 가로
