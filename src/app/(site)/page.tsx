@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
-import Image from "next/image";
+// import Image from "next/image"; // ❌ 리스트에서는 무거운 Next.js Image 사용을 최소화합니다.
 
 /* DB 실시간 반영 설정 */
 // export const dynamic = "force-dynamic"; // ❌ 삭제 (캐싱 적용)
@@ -83,17 +83,17 @@ return { main: mainNews, subs: subNews };
 
 // ListItem 컴포넌트 (내부 태그 div로 변경하여 에러 방지)
 const ListItem = ({ item }: { item: any }) => (
-// 🟢 [핵심 수정] Link 태그를 a 태그로 변경하여 강제 새로고침(메모리 초기화) 유도
-<a href={`/news/${item.category}/${item.id}`} className="flex gap-3 group items-start">
+// 🟢 [추가] prefetch={false} 추가
+<Link href={`/news/${item.category}/${item.id}`} prefetch={false} className="flex gap-3 group items-start">
     <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
     {item.imageUrl && (
-        <Image
+        // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
         // 🟢 [수정] 압축 함수 적용 (200px)
         src={getOptimizedUrl(item.imageUrl, 200)}
         alt={item.title}
-        fill
-        className="object-cover group-hover:scale-110 transition-transform duration-500"
-        sizes="(max-width: 768px) 100px, 120px"
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         loading="lazy"    // 👈 추가
         decoding="async"  // 👈 추가
         />
@@ -110,7 +110,7 @@ const ListItem = ({ item }: { item: any }) => (
         {item.reporterName || "이정혁 기자"}
     </span>
     </div>
-</a>
+</Link>
 );
 
 return (
@@ -132,17 +132,17 @@ return (
             lg:rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
             
             {mainHero ? (
-                // 🟢 [핵심 수정] a 태그로 변경
-                <a href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full relative">
+                // 🟢 [추가] prefetch={false} 추가
+                <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} prefetch={false} className="block h-full w-full relative">
                     {mainHero.imageUrl ? (
-                        <Image 
+                        // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img 
                             // 🟢 [수정] 압축 함수 적용 (800px)
                             src={getOptimizedUrl(mainHero.imageUrl, 800)}
                             alt={mainHero.title} 
-                            fill
-                            priority={true} 
-                            className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                            sizes="(max-width: 1024px) 100vw, 850px"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                            fetchPriority="high"
                         />
                     ) : (
                         <div className="w-full h-full bg-slate-800 flex items-center justify-center text-gray-500">NO IMAGE</div>
@@ -178,7 +178,7 @@ return (
                             </p>
                         </div>
                     </div>
-                </a>
+                </Link>
             ) : (
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">등록된 헤드라인 없음</div>
             )}
@@ -206,17 +206,17 @@ return (
             <div className="flex-1 flex flex-col gap-4">
                 {subHeroes.map((item) => (
                     <div key={item.id} className="flex-1 group relative bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 flex items-center">
-                        {/* 🟢 [핵심 수정] a 태그로 변경 */}
-                        <a href={`/news/${item.category || 'AI'}/${item.id}`} className="flex gap-4 items-start w-full h-full">
+                        {/* 🟢 Link 내부에는 div만 사용 (Hydration 에러 방지) 및 prefetch={false} 추가 */}
+                        <Link href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="flex gap-4 items-start w-full h-full">
                             <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                                 {item.imageUrl && (
-                                    <Image 
+                                    // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img 
                                         // 🟢 [수정] 압축 함수 적용 (200px)
                                         src={getOptimizedUrl(item.imageUrl, 200)}
                                         alt={item.title} 
-                                        fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                        sizes="128px"
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                         loading="lazy"    // 👈 추가
                                         decoding="async"  // 👈 추가
                                     />
@@ -230,7 +230,7 @@ return (
                                     {item.summary || "기사 내용이 없습니다."}
                                 </div>
                             </div>
-                        </a>
+                        </Link>
                     </div>
                 ))}
             </div>
@@ -252,17 +252,17 @@ return (
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {majorNews.map((item) => (
-                // 🟢 [핵심 수정] a 태그로 변경
-                <a key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group block">
+                // 🟢 [추가] prefetch={false} 추가
+                <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="group block">
                 <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                     {item.imageUrl && (
-                    <Image
+                    // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
                         // 🟢 [수정] 압축 함수 적용 (300px)
                         src={getOptimizedUrl(item.imageUrl, 300)}
                         alt={item.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"    // 👈 추가
                         decoding="async"  // 👈 추가
                     />
@@ -270,7 +270,7 @@ return (
                 </div>
                 <div className="font-bold text-sm leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</div>
                 <span className="text-gray-400 text-[10px] mt-1 block font-bold">{item.reporterName || "이정혁 기자"}</span>
-                </a>
+                </Link>
             ))}
             </div>
         </section>
@@ -291,17 +291,17 @@ return (
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                        {/* 🟢 [핵심 수정] a 태그로 변경 */}
-                        <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
+                        {/* 🟢 [추가] prefetch={false} 추가 */}
+                        <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
                             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
-                                <Image
+                                // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
                                 // 🟢 [수정] 압축 함수 적용 (500px)
                                 src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                 alt={mainCatNews.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                sizes="(max-width: 768px) 100vw, 50vw"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 loading="lazy"    // 👈 추가
                                 decoding="async"  // 👈 추가
                                 />
@@ -309,7 +309,7 @@ return (
                             </div>
                             <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                             <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
-                        </a>
+                        </Link>
                         </div>
                         <div className="flex flex-col gap-5">
                         {subCatNews.map((item) => (
@@ -338,17 +338,17 @@ return (
                     </div>
 
                     <div className="mb-8">
-                        {/* 🟢 [핵심 수정] a 태그로 변경 */}
-                        <a href={`/news/${main.category || cat.id}/${main.id}`} className="group block">
+                        {/* 🟢 [추가] prefetch={false} 추가 */}
+                        <Link href={`/news/${main.category || cat.id}/${main.id}`} prefetch={false} className="group block">
                         <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
                             {main.imageUrl && (
-                            <Image
+                            // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
                                 // 🟢 [수정] 압축 함수 적용 (500px)
                                 src={getOptimizedUrl(main.imageUrl, 500)}
                                 alt={main.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                sizes="(max-width: 768px) 100vw, 50vw"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 loading="lazy"    // 👈 추가
                                 decoding="async"  // 👈 추가
                             />
@@ -362,7 +362,7 @@ return (
                             {main.summary}
                             </p>
                         </div>
-                        </a>
+                        </Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -391,17 +391,17 @@ return (
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                    {/* 🟢 [핵심 수정] a 태그로 변경 */}
-                    <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
+                    {/* 🟢 [추가] prefetch={false} 추가 */}
+                    <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
                     <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                         {mainCatNews.imageUrl && (
-                        <Image
+                        // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
                             // 🟢 [수정] 압축 함수 적용 (500px)
                             src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                             alt={mainCatNews.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"    // 👈 추가
                             decoding="async"  // 👈 추가
                         />
@@ -409,7 +409,7 @@ return (
                     </div>
                     <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                     <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
-                    </a>
+                    </Link>
                 </div>
                 <div className="flex flex-col gap-5">
                     {subCatNews.map((item) => (
