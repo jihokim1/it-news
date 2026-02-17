@@ -8,10 +8,10 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 // export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
 export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
-// 🟢 [최종 수정] Vercel 최적화 한도 초과 회피 및 스크롤 렉(딜레이) 제거를 위한 스토리지 직통 연결
+// 스토리지 직통 연결 (이미 업로드 시 WebP로 변환되어 있으므로 원본 주소를 즉시 반환)
 const getOptimizedUrl = (url: string, width?: number) => {
   if (!url) return "";
-  return url; // 변환/압축을 거치지 않고 원본 URL을 즉시 반환하여 가장 빠른 로딩 속도 확보
+  return url; 
 };
 
 const TOP_WIDE_CATEGORIES = [
@@ -46,7 +46,7 @@ export default async function HomePage() {
       },
     },
     orderBy: { publishedAt: "desc" },
-    take: 100, 
+    take: 70, // 🟢 [수정] 박사님 지시대로 노출 개수 60개로 설정
   });
 
   // 2. 메인 헤드라인 로직
@@ -79,23 +79,25 @@ export default async function HomePage() {
     return { main: mainNews, subs: subNews };
   };
 
-  // ListItem 컴포넌트 (내부 태그 div로 변경하여 에러 방지)
-  // 🟢 [수정] 상단 노출용 여부를 판단하는 isPriority 프롭스 추가
+  // ListItem 컴포넌트
   const ListItem = ({ item, isPriority = false }: { item: any; isPriority?: boolean }) => (
-    // 🟢 [추가] prefetch={false} 추가
-    <Link href={`/news/${item.category}/${item.id}`} prefetch={false} className="flex gap-3 group items-start">
+    <Link 
+      href={`/news/${item.category}/${item.id}`} 
+      prefetch={false} 
+      className="flex gap-3 group items-start"
+      // 🟢 [핵심 추가] 60개 렌더링 렉을 없애기 위해, 화면 밖 요소의 렌더링을 생략시키는 CSS 최신 기술 적용
+      style={{ contentVisibility: "auto", containIntrinsicSize: "80px" }}
+    >
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
-          // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            // 🟢 [수정] 압축 함수 통과 (실제로는 직통 반환)
             src={getOptimizedUrl(item.imageUrl, 200)}
             alt={item.title}
-            width={200}  // 🟢 [추가] 3:2 비율 가로
-            height={133} // 🟢 [추가] 3:2 비율 세로
+            width={200}  
+            height={133} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            // 🟢 [수정] isPriority가 true면 lazy 로딩 비활성화
+            // 🟢 [수정] 60개의 네트워크 폭주를 막기 위해, 우선순위가 아니면 지연 로딩 적용
             {...(isPriority ? { fetchPriority: "high" } : { loading: "lazy", decoding: "async" })}
           />
         )}
@@ -115,204 +117,293 @@ export default async function HomePage() {
   );
 
   return (
-    <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
-      <div className="container mx-auto px-4 py-8 max-w-[1200px]">
+    <>
+      {/* 슈파베이스 스토리지 서버 사전 연결 (Preconnect & DNS-Prefetch) */}
+      <link rel="preconnect" href="https://luzcrfpmfdodyplchtkq.supabase.co" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://luzcrfpmfdodyplchtkq.supabase.co" />
 
-        {/* =====================================================================================
-            [섹션 1] 메인 헤드라인
-            ===================================================================================== */}
-        <section className="mb-12 border-b border-gray-100 pb-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[500px]">
-            
-            {/* 1-1. 왼쪽 메인 기사 */}
-            <div className="lg:col-span-8 relative group 
-              aspect-[4/3] h-auto lg:aspect-auto lg:h-full 
-              w-screen lg:w-full 
-              ml-[50%] -translate-x-1/2 lg:ml-0 lg:translate-x-0 
-              -mt-8 lg:mt-0 
-              lg:rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
+      <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
+        <div className="container mx-auto px-4 py-8 max-w-[1200px]">
+
+          {/* =====================================================================================
+              [섹션 1] 메인 헤드라인
+              ===================================================================================== */}
+          <section className="mb-12 border-b border-gray-100 pb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[500px]">
               
-              {mainHero ? (
-                // 🟢 [추가] prefetch={false} 추가
-                <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} prefetch={false} className="block h-full w-full relative">
-                  {mainHero.imageUrl ? (
-                    // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img 
-                      // 🟢 [수정] 압축 함수 통과
-                      src={getOptimizedUrl(mainHero.imageUrl, 800)}
-                      alt={mainHero.title} 
-                      width={800}  // 🟢 [추가] 4:3 비율 가로
-                      height={600} // 🟢 [추가] 4:3 비율 세로
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                      fetchPriority="high"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-800 flex items-center justify-center text-gray-500">NO IMAGE</div>
-                  )}
+              {/* 1-1. 왼쪽 메인 기사 */}
+              <div className="lg:col-span-8 relative group 
+                aspect-[4/3] h-auto lg:aspect-auto lg:h-full 
+                w-screen lg:w-full 
+                ml-[50%] -translate-x-1/2 lg:ml-0 lg:translate-x-0 
+                -mt-8 lg:mt-0 
+                lg:rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
+                
+                {mainHero ? (
+                  <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} prefetch={false} className="block h-full w-full relative">
+                    {mainHero.imageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img 
+                        src={getOptimizedUrl(mainHero.imageUrl, 800)}
+                        alt={mainHero.title} 
+                        width={800}  
+                        height={600} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        fetchPriority="high"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-gray-500">NO IMAGE</div>
+                    )}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90" />
-                  
-                  <div className="absolute bottom-0 left-0 w-full p-6 md:p-14 pb-8">
-                    <div className="lg:backdrop-blur-md lg:bg-white/20 lg:border lg:border-white/20 rounded-xl lg:rounded-2xl lg:p-6 lg:shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md shadow-blue-600/30">
-                          {mainHero.category || 'HEADLINE'}
-                        </span>
-
-                        {/* @ts-ignore */}
-                        {mainHero.isPinned && (
-                          <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
-                            Main
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90" />
+                    
+                    <div className="absolute bottom-0 left-0 w-full p-6 md:p-14 pb-8">
+                      <div className="lg:backdrop-blur-md lg:bg-white/20 lg:border lg:border-white/20 rounded-xl lg:rounded-2xl lg:p-6 lg:shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md shadow-blue-600/30">
+                            {mainHero.category || 'HEADLINE'}
                           </span>
-                        )}
 
-                        <span className="text-gray-300 text-xs font-medium border-l border-white/30 pl-3">
-                          {new Date(mainHero.publishedAt).toLocaleDateString()}
-                        </span>
+                          {/* @ts-ignore */}
+                          {mainHero.isPinned && (
+                            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                              Main
+                            </span>
+                          )}
+
+                          <span className="text-gray-300 text-xs font-medium border-l border-white/30 pl-3">
+                            {new Date(mainHero.publishedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-2 drop-shadow-lg line-clamp-3 break-keep">
+                            {mainHero.title}
+                        </h1>
+                        
+                        <p className="text-gray-300 text-sm md:text-lg line-clamp-1 md:line-clamp-2 font-medium opacity-90 block">
+                          {mainHero.summary}
+                        </p>
                       </div>
-                      
-                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-2 drop-shadow-lg line-clamp-3 break-keep">
-                          {mainHero.title}
-                      </h1>
-                      
-                      <p className="text-gray-300 text-sm md:text-lg line-clamp-1 md:line-clamp-2 font-medium opacity-90 block">
-                        {mainHero.summary}
-                      </p>
                     </div>
-                  </div>
-                </Link>
-              ) : (
-                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">등록된 헤드라인 없음</div>
-              )}
-            </div>
-
-            {/* 1-2. 오른쪽 Trending Now (4칸) */}
-            <div className="lg:col-span-4 flex flex-col h-full mt-8 lg:mt-0 px-1">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <div className="bg-red-100 p-1.5 rounded-lg">
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 3.258 1.37 6.12z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                    Hot Issue
-                  </h2>
-                </div>
-                <Link href="/news/all" className="group flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
-                  더보기
-                  <span className="group-hover:translate-x-0.5 transition-transform">+</span>
-                </Link>
+                  </Link>
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">등록된 헤드라인 없음</div>
+                )}
               </div>
 
-              <div className="flex-1 flex flex-col gap-4">
-                {subHeroes.map((item) => (
-                  <div key={item.id} className="flex-1 group relative bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 flex items-center">
-                    {/* 🟢 Link 내부에는 div만 사용 (Hydration 에러 방지) 및 prefetch={false} 추가 */}
-                    <Link href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="flex gap-4 items-start w-full h-full">
-                      <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
+              {/* 1-2. 오른쪽 Trending Now (4칸) */}
+              <div className="lg:col-span-4 flex flex-col h-full mt-8 lg:mt-0 px-1">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-red-100 p-1.5 rounded-lg">
+                      <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 3.258 1.37 6.12z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                      Hot Issue
+                    </h2>
+                  </div>
+                  <Link href="/news/all" className="group flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
+                    더보기
+                    <span className="group-hover:translate-x-0.5 transition-transform">+</span>
+                  </Link>
+                </div>
+
+                <div className="flex-1 flex flex-col gap-4">
+                  {subHeroes.map((item) => (
+                    <div key={item.id} className="flex-1 group relative bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 flex items-center">
+                      <Link href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="flex gap-4 items-start w-full h-full">
+                        <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
+                          {item.imageUrl && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img 
+                              src={getOptimizedUrl(item.imageUrl, 200)}
+                              alt={item.title} 
+                              width={200}  
+                              height={150} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              fetchPriority="high" 
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-1">
+                          <div className="text-sm md:text-[15px] font-bold leading-snug text-slate-900 group-hover:text-blue-600 line-clamp-2 transition-colors mb-1">
+                            {item.title}
+                          </div>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-2 font-medium">
+                            {item.summary || "기사 내용이 없습니다."}
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* =====================================================================================
+              [나머지 섹션]
+              ===================================================================================== */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-10">
+            <div className="lg:col-span-3 space-y-12">
+              
+              {/* 섹션 2: 주요 뉴스 */}
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <h2 className="text-lg font-black text-slate-900">주요뉴스</h2>
+                  <div className="h-[2px] flex-1 bg-gray-200"></div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {majorNews.map((item) => (
+                    <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="group block">
+                      <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
-                          // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                           /* eslint-disable-next-line @next/next/no-img-element */
-                          <img 
-                            // 🟢 [수정] 압축 함수 통과
-                            src={getOptimizedUrl(item.imageUrl, 200)}
-                            alt={item.title} 
-                            width={200}  // 🟢 [추가] 4:3 비율 가로
-                            height={150} // 🟢 [추가] 4:3 비율 세로
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            // 🟢 [수정] 첫 화면이므로 lazy 속성 삭제 및 fetchPriority 추가
-                            fetchPriority="high" 
+                          <img
+                            src={getOptimizedUrl(item.imageUrl, 300)}
+                            alt={item.title}
+                            width={300}  
+                            height={188} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            fetchPriority="high"
                           />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-1">
-                        <div className="text-sm md:text-[15px] font-bold leading-snug text-slate-900 group-hover:text-blue-600 line-clamp-2 transition-colors mb-1">
-                          {item.title}
+                      <div className="font-bold text-sm leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</div>
+                      <span className="text-gray-400 text-[10px] mt-1 block font-bold">{item.reporterName || "이정혁 기자"}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              {/* 섹션 3: 카테고리별 뉴스 */}
+              <div className="space-y-10">
+                {TOP_WIDE_CATEGORIES.map((cat) => {
+                  const data = getCategoryData(cat.id);
+                  if (!data) return null;
+                  const { main: mainCatNews, subs: subCatNews } = data;
+                  const titleColor = getCategoryColor(cat.id);
+
+                  return (
+                    <section key={cat.id} className="border-t-2 border-gray-200 pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
+                        <Link href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</Link>
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
+                          <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
+                            <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
+                              {mainCatNews.imageUrl && (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
+                                  alt={mainCatNews.title}
+                                  width={500}  
+                                  height={281} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  loading="lazy"    
+                                  decoding="async"  
+                                />
+                              )}
+                            </div>
+                            <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
+                            <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
+                          </Link>
                         </div>
-                        <div className="text-xs text-gray-500 leading-relaxed line-clamp-2 font-medium">
-                          {item.summary || "기사 내용이 없습니다."}
+                        <div className="flex flex-col gap-5">
+                          {subCatNews.map((item) => (
+                            <ListItem key={item.id} item={item} />
+                          ))}
                         </div>
                       </div>
-                    </Link>
-                  </div>
-                ))}
+                    </section>
+                  );
+                })}
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* =====================================================================================
-            [나머지 섹션]
-            ===================================================================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-10">
-          <div className="lg:col-span-3 space-y-12">
-            
-            {/* 섹션 2: 주요 뉴스 */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-black text-slate-900">주요뉴스</h2>
-                <div className="h-[2px] flex-1 bg-gray-200"></div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {majorNews.map((item) => (
-                  // 🟢 [추가] prefetch={false} 추가
-                  <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="group block">
-                    <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
-                      {item.imageUrl && (
-                        // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          // 🟢 [수정] 압축 함수 통과
-                          src={getOptimizedUrl(item.imageUrl, 300)}
-                          alt={item.title}
-                          width={300}  // 🟢 [추가] 16:10 비율 가로
-                          height={188} // 🟢 [추가] 16:10 비율 세로
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          // 🟢 [수정] 상단 노출 영역이므로 lazy 속성 삭제
-                          fetchPriority="high"
-                        />
-                      )}
+              {/* 섹션 4: 주식 & 코인 */}
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t-2 border-gray-200 pt-6">
+                {MIDDLE_SPLIT_CATEGORIES.map((cat) => {
+                  const data = getCategoryData(cat.id);
+                  if (!data) return null;
+                  const { main, subs } = data;
+                  const titleColor = getCategoryColor(cat.id);
+
+                  return (
+                    <div key={cat.id}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
+                        <Link href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</Link>
+                      </div>
+
+                      <div className="mb-8">
+                        <Link href={`/news/${main.category || cat.id}/${main.id}`} prefetch={false} className="group block">
+                          <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
+                            {main.imageUrl && (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={getOptimizedUrl(main.imageUrl, 500)}
+                                alt={main.title}
+                                width={500}  
+                                height={281} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"    
+                                decoding="async"  
+                              />
+                            )}
+                          </div>
+                          <div className="min-h-[100px] flex flex-col">
+                            <h4 className="text-lg font-bold leading-snug text-slate-900 group-hover:text-blue-600 mb-2 line-clamp-2 transition-colors">
+                              {main.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                              {main.summary}
+                            </p>
+                          </div>
+                        </Link>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        {subs.map((item) => (
+                          <ListItem key={item.id} item={item} />
+                        ))}
+                      </div>
                     </div>
-                    <div className="font-bold text-sm leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</div>
-                    <span className="text-gray-400 text-[10px] mt-1 block font-bold">{item.reporterName || "이정혁 기자"}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
+                  );
+                })}
+              </section>
 
-            {/* 섹션 3: 카테고리별 뉴스 */}
-            <div className="space-y-10">
-              {TOP_WIDE_CATEGORIES.map((cat) => {
+              {/* 섹션 5: 테크 */}
+              {(() => {
+                const cat = BOTTOM_CATEGORY;
                 const data = getCategoryData(cat.id);
                 if (!data) return null;
                 const { main: mainCatNews, subs: subCatNews } = data;
                 const titleColor = getCategoryColor(cat.id);
 
                 return (
-                  <section key={cat.id} className="border-t-2 border-gray-200 pt-6">
+                  <section className="border-t-2 border-gray-200 pt-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
                       <Link href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</Link>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                        {/* 🟢 [추가] prefetch={false} 추가 */}
                         <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
-                              // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img
-                                // 🟢 [수정] 압축 함수 통과
                                 src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                 alt={mainCatNews.title}
-                                width={500}  // 🟢 [추가] 16:9 비율 가로
-                                height={281} // 🟢 [추가] 16:9 비율 세로
+                                width={500}  
+                                height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"    // 👈 유지
-                                decoding="async"  // 👈 유지
+                                loading="lazy"    
+                                decoding="async"  
                               />
                             )}
                           </div>
@@ -328,121 +419,18 @@ export default async function HomePage() {
                     </div>
                   </section>
                 );
-              })}
+              })()}
+
             </div>
 
-            {/* 섹션 4: 주식 & 코인 */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t-2 border-gray-200 pt-6">
-              {MIDDLE_SPLIT_CATEGORIES.map((cat) => {
-                const data = getCategoryData(cat.id);
-                if (!data) return null;
-                const { main, subs } = data;
-                const titleColor = getCategoryColor(cat.id);
-
-                return (
-                  <div key={cat.id}>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                      <Link href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</Link>
-                    </div>
-
-                    <div className="mb-8">
-                      {/* 🟢 [추가] prefetch={false} 추가 */}
-                      <Link href={`/news/${main.category || cat.id}/${main.id}`} prefetch={false} className="group block">
-                        <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
-                          {main.imageUrl && (
-                            // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              // 🟢 [수정] 압축 함수 통과
-                              src={getOptimizedUrl(main.imageUrl, 500)}
-                              alt={main.title}
-                              width={500}  // 🟢 [추가] 16:9 비율 가로
-                              height={281} // 🟢 [추가] 16:9 비율 세로
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              loading="lazy"    // 👈 유지
-                              decoding="async"  // 👈 유지
-                            />
-                          )}
-                        </div>
-                        <div className="min-h-[100px] flex flex-col">
-                          <h4 className="text-lg font-bold leading-snug text-slate-900 group-hover:text-blue-600 mb-2 line-clamp-2 transition-colors">
-                            {main.title}
-                          </h4>
-                          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                            {main.summary}
-                          </p>
-                        </div>
-                      </Link>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                      {subs.map((item) => (
-                        <ListItem key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </section>
-
-            {/* 섹션 5: 테크 */}
-            {(() => {
-              const cat = BOTTOM_CATEGORY;
-              const data = getCategoryData(cat.id);
-              if (!data) return null;
-              const { main: mainCatNews, subs: subCatNews } = data;
-              const titleColor = getCategoryColor(cat.id);
-
-              return (
-                <section className="border-t-2 border-gray-200 pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                    <Link href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</Link>
-                  </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                      {/* 🟢 [추가] prefetch={false} 추가 */}
-                      <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
-                        <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
-                          {mainCatNews.imageUrl && (
-                            // 🟢 [핵심 수정] Next.js <Image> 대신 일반 <img> 태그 사용
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              // 🟢 [수정] 압축 함수 통과
-                              src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
-                              alt={mainCatNews.title}
-                              width={500}  // 🟢 [추가] 16:9 비율 가로
-                              height={281} // 🟢 [추가] 16:9 비율 세로
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              loading="lazy"    // 👈 유지
-                              decoding="async"  // 👈 유지
-                            />
-                          )}
-                        </div>
-                        <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
-                        <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
-                      </Link>
-                    </div>
-                    <div className="flex flex-col gap-5">
-                      {subCatNews.map((item) => (
-                        <ListItem key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                </section>
-              );
-            })()}
-
+            <aside className="lg:col-span-1">
+              <div className="sticky top-8">
+                <NewsSidebar />
+              </div>
+            </aside>
           </div>
-
-          <aside className="lg:col-span-1">
-            <div className="sticky top-8">
-              <NewsSidebar />
-            </div>
-          </aside>
         </div>
       </div>
-    </div>
+    </>
   );
 }
