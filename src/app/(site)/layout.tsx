@@ -6,7 +6,8 @@ children,
 children: React.ReactNode;
 }) {
 return (
-<div className="relative min-h-screen flex flex-col">
+// 🟢 [핵심 수정] overflow-x-hidden과 w-full을 추가하여 사이트 내부 가로 스크롤만 방지합니다.
+<div className="relative min-h-screen flex flex-col overflow-x-hidden w-full">
     {/* 헤더는 여기서 보여줍니다 */}
     <Header />
     
