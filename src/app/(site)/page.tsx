@@ -8,13 +8,11 @@ import { NewsSidebar } from "@/components/news/NewsSidebar";
 // export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
 export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
-// 🟢 [추가] 무료 이미지 압축 함수 (wsrv.nl 사용)
-const getOptimizedUrl = (url: string, width: number) => {
-  if (!url) return "";
-  if (url.endsWith(".webp")) return url; // 이미 WebP면 통과
-  // wsrv.nl을 통해 리사이징 + WebP 변환 + 품질 80% 적용
-  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp&q=80`;
-};
+// 🟢 [최종 수정] Vercel 최적화 한도 에러 및 외부망 딜레이를 완벽히 회피하기 위한 직통 연결
+const getOptimizedUrl = (url: string, width?: number) => {
+    if (!url) return "";
+    return url; // 변환/압축 등의 딜레이 유발 요소를 모두 제거하고 스토리지 원본 URL을 즉시 반환
+  };
 
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
