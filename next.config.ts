@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb', // 1MB 제한을 10MB로 늘려주는 설정
     },
+    // 🟢 [추가] 라우터 캐시 유지 시간 증가 (뒤로 가기 시 리빌딩/새로고침 방지)
+    staleTimes: {
+      dynamic: 180, // 동적 페이지 라우터 캐시: 30초 -> 3분(180초)으로 연장
+      static: 1800, // 정적 페이지 라우터 캐시: 5분 -> 30분(1800초)으로 연장
+    },
   },
   typescript: {
     ignoreBuildErrors: true,
