@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+// import Link from "next/link"; // ❌ Next.js 링크 삭제 (구글 광고 충돌 원인)
 import { NewsSidebar } from "@/components/news/NewsSidebar";
 import Image from "next/image"; // 🟢 Next.js Image 사용 (unoptimized 적용)
 
@@ -81,9 +81,9 @@ export default async function HomePage() {
 
   // ListItem 컴포넌트
   const ListItem = ({ item, isPriority = false }: { item: any; isPriority?: boolean }) => (
-    <Link 
+    // 🟢 [핵심 수정] Link -> a 태그로 변경하여 구글 광고 충돌(Back 버튼 오류) 원천 차단
+    <a 
       href={`/news/${item.category}/${item.id}`} 
-      prefetch={false} 
       className="flex gap-3 group items-start"
       // 🟢 [핵심 추가] 60개 렌더링 렉을 없애기 위해, 화면 밖 요소의 렌더링을 생략시키는 CSS 최신 기술 적용
       style={{ contentVisibility: "auto", containIntrinsicSize: "80px" }}
@@ -96,7 +96,7 @@ export default async function HomePage() {
             width={200}  
             height={133} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            unoptimized // 🟢 Vercel 한도 우회 및 광고 충돌 방지
+            unoptimized // 🟢 Vercel 한도 우회
             // 🟢 [수정] 60개의 네트워크 폭주를 막기 위해, 우선순위가 아니면 지연 로딩 적용
             {...(isPriority ? { priority: true } : { loading: "lazy", decoding: "async" })}
           />
@@ -113,7 +113,7 @@ export default async function HomePage() {
           {item.reporterName || "이정혁 기자"}
         </span>
       </div>
-    </Link>
+    </a>
   );
 
   return (
@@ -140,7 +140,8 @@ export default async function HomePage() {
                 lg:rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
                 
                 {mainHero ? (
-                  <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} prefetch={false} className="block h-full w-full relative">
+                  // 🟢 [핵심 수정] Link -> a 태그로 변경
+                  <a href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full relative">
                     {mainHero.imageUrl ? (
                       <Image 
                         src={getOptimizedUrl(mainHero.imageUrl, 800)}
@@ -148,7 +149,7 @@ export default async function HomePage() {
                         width={800}  
                         height={600} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        priority
+                        priority // 🟢 메인 헤드라인 즉시 로딩 강제
                         unoptimized
                       />
                     ) : (
@@ -185,7 +186,7 @@ export default async function HomePage() {
                         </p>
                       </div>
                     </div>
-                  </Link>
+                  </a>
                 ) : (
                   <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">등록된 헤드라인 없음</div>
                 )}
@@ -204,16 +205,18 @@ export default async function HomePage() {
                       Hot Issue
                     </h2>
                   </div>
-                  <Link href="/news/all" className="group flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
+                  {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                  <a href="/news/all" className="group flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
                     더보기
                     <span className="group-hover:translate-x-0.5 transition-transform">+</span>
-                  </Link>
+                  </a>
                 </div>
 
                 <div className="flex-1 flex flex-col gap-4">
                   {subHeroes.map((item) => (
                     <div key={item.id} className="flex-1 group relative bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 flex items-center">
-                      <Link href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="flex gap-4 items-start w-full h-full">
+                      {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                      <a href={`/news/${item.category || 'AI'}/${item.id}`} className="flex gap-4 items-start w-full h-full">
                         <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                           {item.imageUrl && (
                             <Image 
@@ -222,7 +225,7 @@ export default async function HomePage() {
                               width={200}  
                               height={150} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              priority 
+                              priority // 🟢 우측 상단 핫이슈 즉시 로딩
                               unoptimized
                             />
                           )}
@@ -235,7 +238,7 @@ export default async function HomePage() {
                             {item.summary || "기사 내용이 없습니다."}
                           </div>
                         </div>
-                      </Link>
+                      </a>
                     </div>
                   ))}
                 </div>
@@ -257,7 +260,8 @@ export default async function HomePage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {majorNews.map((item) => (
-                    <Link key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} prefetch={false} className="group block">
+                    // 🟢 [핵심 수정] Link -> a 태그
+                    <a key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group block">
                       <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
                           <Image
@@ -266,14 +270,14 @@ export default async function HomePage() {
                             width={300}  
                             height={188} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            priority
+                            priority // 🟢 상단 주요뉴스 즉시 로딩
                             unoptimized
                           />
                         )}
                       </div>
                       <div className="font-bold text-sm leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</div>
                       <span className="text-gray-400 text-[10px] mt-1 block font-bold">{item.reporterName || "이정혁 기자"}</span>
-                    </Link>
+                    </a>
                   ))}
                 </div>
               </section>
@@ -290,11 +294,13 @@ export default async function HomePage() {
                     <section key={cat.id} className="border-t-2 border-gray-200 pt-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                        <Link href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</Link>
+                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        <a href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</a>
                       </div>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                          <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
+                          {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                          <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
                             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                               {mainCatNews.imageUrl && (
                                 <Image
@@ -303,15 +309,14 @@ export default async function HomePage() {
                                   width={500}  
                                   height={281} 
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  loading="lazy"    
-                                  decoding="async"
-                                  unoptimized  
+                                  unoptimized // 🟢 Vercel 한도 우회
+                                  // 🟢 하단 섹션들은 기본값(lazy loading) 유지
                                 />
                               )}
                             </div>
                             <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                             <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
-                          </Link>
+                          </a>
                         </div>
                         <div className="flex flex-col gap-5">
                           {subCatNews.map((item) => (
@@ -336,11 +341,13 @@ export default async function HomePage() {
                     <div key={cat.id}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                        <Link href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</Link>
+                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        <a href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</a>
                       </div>
 
                       <div className="mb-8">
-                        <Link href={`/news/${main.category || cat.id}/${main.id}`} prefetch={false} className="group block">
+                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        <a href={`/news/${main.category || cat.id}/${main.id}`} className="group block">
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
                             {main.imageUrl && (
                               <Image
@@ -349,9 +356,7 @@ export default async function HomePage() {
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"    
-                                decoding="async"
-                                unoptimized  
+                                unoptimized // 🟢 Vercel 한도 우회
                               />
                             )}
                           </div>
@@ -363,7 +368,7 @@ export default async function HomePage() {
                               {main.summary}
                             </p>
                           </div>
-                        </Link>
+                        </a>
                       </div>
 
                       <div className="flex flex-col gap-4">
@@ -388,11 +393,13 @@ export default async function HomePage() {
                   <section className="border-t-2 border-gray-200 pt-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                      <Link href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</Link>
+                      {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                      <a href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</a>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                        <Link href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} prefetch={false} className="group block">
+                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
                               <Image
@@ -401,15 +408,13 @@ export default async function HomePage() {
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"    
-                                decoding="async"
-                                unoptimized  
+                                unoptimized // 🟢 Vercel 한도 우회
                               />
                             )}
                           </div>
                           <h4 className="text-xl font-bold leading-tight text-slate-900 group-hover:text-blue-600 mb-3 transition-colors">{mainCatNews.title}</h4>
                           <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{mainCatNews.summary}</p>
-                        </Link>
+                        </a>
                       </div>
                       <div className="flex flex-col gap-5">
                         {subCatNews.map((item) => (
