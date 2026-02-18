@@ -1,9 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { NewsSidebar } from "@/components/news/NewsSidebar";
-import Image from "next/image"; // 🟢 [복구 완료] Next.js Image 컴포넌트 활성화
+import Image from "next/image"; // 🟢 Next.js Image 사용 (unoptimized 적용)
 
-export const revalidate = 60; // 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
+/* DB 실시간 반영 설정 */
+// export const dynamic = "force-dynamic"; // ❌ 삭제 (캐싱 적용)
+// export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
+export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
+
+// 스토리지 직통 연결 (이미 업로드 시 WebP로 변환되어 있으므로 원본 주소를 즉시 반환)
+const getOptimizedUrl = (url: string, width?: number) => {
+  if (!url) return "";
+  return url; 
+};
 
 const TOP_WIDE_CATEGORIES = [
   { id: "AI", label: "AI" },
@@ -37,7 +46,7 @@ export default async function HomePage() {
       },
     },
     orderBy: { publishedAt: "desc" },
-    take: 70, // 🟢 박사님 지시대로 노출 개수 70개로 설정
+    take: 70, // 🟢 [수정] 박사님 지시대로 노출 개수 70개로 설정
   });
 
   // 2. 메인 헤드라인 로직
@@ -76,17 +85,20 @@ export default async function HomePage() {
       href={`/news/${item.category}/${item.id}`} 
       prefetch={false} 
       className="flex gap-3 group items-start"
+      // 🟢 [핵심 추가] 60개 렌더링 렉을 없애기 위해, 화면 밖 요소의 렌더링을 생략시키는 CSS 최신 기술 적용
       style={{ contentVisibility: "auto", containIntrinsicSize: "80px" }}
     >
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
         {item.imageUrl && (
           <Image
-            src={item.imageUrl}
+            src={getOptimizedUrl(item.imageUrl, 200)}
             alt={item.title}
             width={200}  
             height={133} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            priority={isPriority} // 🟢 Next.js 방식에 맞춰 우선순위 로딩 적용 (priority가 true면 lazy가 자동 해제됨)
+            unoptimized // 🟢 Vercel 한도 우회 및 광고 충돌 방지
+            // 🟢 [수정] 60개의 네트워크 폭주를 막기 위해, 우선순위가 아니면 지연 로딩 적용
+            {...(isPriority ? { priority: true } : { loading: "lazy", decoding: "async" })}
           />
         )}
       </div>
@@ -131,12 +143,13 @@ export default async function HomePage() {
                   <Link href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} prefetch={false} className="block h-full w-full relative">
                     {mainHero.imageUrl ? (
                       <Image 
-                        src={mainHero.imageUrl}
+                        src={getOptimizedUrl(mainHero.imageUrl, 800)}
                         alt={mainHero.title} 
                         width={800}  
                         height={600} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        priority // 🟢 메인 헤드라인 즉시 로딩 강제
+                        priority
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full bg-slate-800 flex items-center justify-center text-gray-500">NO IMAGE</div>
@@ -204,12 +217,13 @@ export default async function HomePage() {
                         <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                           {item.imageUrl && (
                             <Image 
-                              src={item.imageUrl}
+                              src={getOptimizedUrl(item.imageUrl, 200)}
                               alt={item.title} 
                               width={200}  
                               height={150} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              priority // 🟢 우측 상단 핫이슈 즉시 로딩
+                              priority 
+                              unoptimized
                             />
                           )}
                         </div>
@@ -247,12 +261,13 @@ export default async function HomePage() {
                       <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
                           <Image
-                            src={item.imageUrl}
+                            src={getOptimizedUrl(item.imageUrl, 300)}
                             alt={item.title}
                             width={300}  
                             height={188} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            priority // 🟢 상단 주요뉴스 즉시 로딩
+                            priority
+                            unoptimized
                           />
                         )}
                       </div>
@@ -283,12 +298,14 @@ export default async function HomePage() {
                             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                               {mainCatNews.imageUrl && (
                                 <Image
-                                  src={mainCatNews.imageUrl}
+                                  src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                   alt={mainCatNews.title}
                                   width={500}  
                                   height={281} 
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  // 🟢 하단 섹션들은 기본값(lazy loading) 유지
+                                  loading="lazy"    
+                                  decoding="async"
+                                  unoptimized  
                                 />
                               )}
                             </div>
@@ -327,11 +344,14 @@ export default async function HomePage() {
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
                             {main.imageUrl && (
                               <Image
-                                src={main.imageUrl}
+                                src={getOptimizedUrl(main.imageUrl, 500)}
                                 alt={main.title}
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"    
+                                decoding="async"
+                                unoptimized  
                               />
                             )}
                           </div>
@@ -376,11 +396,14 @@ export default async function HomePage() {
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
                               <Image
-                                src={mainCatNews.imageUrl}
+                                src={getOptimizedUrl(mainCatNews.imageUrl, 500)}
                                 alt={mainCatNews.title}
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"    
+                                decoding="async"
+                                unoptimized  
                               />
                             )}
                           </div>
