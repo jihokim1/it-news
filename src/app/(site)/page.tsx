@@ -8,10 +8,18 @@ import Image from "next/image"; // 🟢 Next.js Image 사용 (unoptimized 적용
 // export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
 export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
-// 스토리지 직통 연결 (이미 업로드 시 WebP로 변환되어 있으므로 원본 주소를 즉시 반환)
-const getOptimizedUrl = (url: string, width?: number) => {
+// 🟢 [핵심 수정] 스토리지 직통 연결 (슈파베이스 이미지 변환 API를 통한 해상도 강제 축소)
+const getOptimizedUrl = (url: string, width: number = 400) => {
   if (!url) return "";
-  return url; 
+  
+  // 1. 이미 슈파베이스 이미지 변환 URL이 적용된 경우 원본 반환
+  if (url.includes('/render/image/public/')) return url;
+
+  // 2. 일반 public URL인 경우, 슈파베이스 내부 변환 API 주소로 글자 바꿔치기 및 해상도 파라미터 추가
+  return url.replace(
+    '/storage/v1/object/public/', 
+    `/storage/v1/render/image/public/`
+  ) + `?width=${width}&resize=contain`; 
 };
 
 const TOP_WIDE_CATEGORIES = [
