@@ -16,28 +16,42 @@ params: Promise<{ category: string; id: string }>;
 // 1. SEO 메타데이터 생성 (검색엔진 노출 설정)
 // =============================================================================
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-const { id } = await params;
+// 🟢 [수정됨] url 생성을 위해 category도 함께 가져옵니다.
+const { id, category } = await params;
 const news = await prisma.news.findUnique({ where: { id: Number(id) } });
+
 if (!news) return {};
 
+// 🟢 [추가됨] 이 기사의 고유한 전체 주소(URL)를 생성합니다.
+const articleUrl = `https://trendit.ai.kr/news/${category}/${id}`;
+
 return {
-title: news.title,
-description: news.summary || news.title,
-keywords: news.tags || "",
-openGraph: {
     title: news.title,
     description: news.summary || news.title,
+    keywords: news.tags || "",
+    
+    // ⭐ 1. 표준 URL(Canonical URL) 추가 (중복 문서 방지)
+    alternates: {
+    canonical: articleUrl,
+    },
+    
+    openGraph: {
+    title: news.title,
+    description: news.summary || news.title,
+    // ⭐ 2. og:url 및 og:type 추가 (소셜 공유 최적화)
+    url: articleUrl,
+    type: "article", 
     images: news.imageUrl ? [news.imageUrl] : [],
-},
-twitter: {
+    },
+    
+    twitter: {
     card: "summary_large_image",
     title: news.title,
     description: news.summary || news.title,
     images: news.imageUrl ? [news.imageUrl] : [],
-},
+    },
 };
 }
-
 /// 🟢 [수정됨] Vercel 서버(UTC) 시간에 9시간을 더해 한국 시간(KST)으로 강제 변환
 const formatDate = (date: Date | string) => {
     const d = new Date(date);
