@@ -48,17 +48,16 @@ if (body.type === 'INSERT' || body.type === 'UPDATE') {
     payload.append('title', article.title);
     payload.append('content', stripHtml(article.content));
     
-    if (article.imageUrl) payload.append('img_url', article.imageUrl);
+    // ⭐ [수정됨] 이미지 주소가 절대 경로(http)가 아니면 도메인을 강제로 붙여서 전송
+    if (article.imageUrl) {
+    const absoluteImageUrl = article.imageUrl.startsWith('http') 
+        ? article.imageUrl 
+        : `https://trendit.ai.kr${article.imageUrl.startsWith('/') ? '' : '/'}${article.imageUrl}`;
+    payload.append('img_url', absoluteImageUrl);
+    }
+
     if (article.reporterName) payload.append('writer_name', article.reporterName);
     if (article.reporterEmail) payload.append('writer_email', article.reporterEmail);
-} 
-// 2-B. 기사가 [삭제(DELETE)] 되었을 때
-else if (body.type === 'DELETE') {
-    const oldArticle = body.old_record; // 삭제된 옛날 데이터
-    if (!oldArticle) return NextResponse.json({ error: '삭제할 데이터가 없습니다.' }, { status: 400 });
-
-    payload.append('act', 'delete'); // 삭제 명령
-    payload.append('org_id', oldArticle.id.toString()); // 삭제할 기사 번호
 }
 
 // 3. 뉴스랭키 서버로 발송
