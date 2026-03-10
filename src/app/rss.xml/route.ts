@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const BASE_URL = "https://trendit.ai.kr";
 
 export async function GET() {
