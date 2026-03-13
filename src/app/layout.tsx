@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import Script from 'next/script';
 import NaverAnalytics from "@/components/NaverAnalytics";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // ⚡ [유지] 이건 있어야 시간이 실시간으로 흐릅니다.
 export const dynamic = "force-dynamic";
@@ -99,7 +100,7 @@ export default function RootLayout({
 
         {/* 메인 콘텐츠 */}
         {children}
-
+        <SpeedInsights />
         <Footer />
 
         {/* --- 네이버 애널리틱스 --- */}
