@@ -1,13 +1,25 @@
+# 구글 애드센스 및 광고 봇 허용 (수익화 필수)
 User-agent: Mediapartners-Google
 Allow: /
 
+# 구글 광고 품질 평가 봇 허용
 User-agent: AdsBot-Google
 Allow: /
 
-# 나머지 모든 로봇 설정 (박사님의 현재 설정 유지)
+# 네이버 검색 엔진 봇 (Yeti) 명시적 허용
+User-agent: Yeti
+Allow: /
+
+# 구글 일반 검색 엔진 봇 명시적 허용
+User-agent: Googlebot
+Allow: /
+
+# 나머지 모든 로봇에 대한 기본 규칙
 User-agent: *
 Allow: /
+# 보안 및 서버 부하 방지를 위해 크롤링 금지 구역 설정
 Disallow: /admin/
 Disallow: /api/
 
+# 트렌드IT 전체 기사 지도(사이트맵) 위치 안내
 Sitemap: https://trendit.ai.kr/sitemap.xml
