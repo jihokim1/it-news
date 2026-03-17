@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { MetadataRoute } from "next";
+import { headers } from "next/headers"; // ⭐ [추가] 캐시 파괴용 무기 장착
 
-// ⭐ [캐시 완벽 파괴] 기사를 쓸 때마다 무조건 DB를 새로 읽어오도록 강제합니다.
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+// ⭐ [강제 동기화 핵심] 이 함수를 호출하는 순간 Next.js의 모든 캐싱이 무력화됩니다.
+headers();
+
 const baseUrl = "https://trendit.ai.kr"; // 도메인
 
 // 1. 모든 뉴스 기사 가져오기 (최신 5000개 정도)
