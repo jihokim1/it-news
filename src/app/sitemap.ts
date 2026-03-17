@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { MetadataRoute } from "next";
 
+// ⭐ [캐시 완벽 파괴] 기사를 쓸 때마다 무조건 DB를 새로 읽어오도록 강제합니다.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 const baseUrl = "https://trendit.ai.kr"; // 도메인
 
