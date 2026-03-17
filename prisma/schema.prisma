@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  DATABASE_URL = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // ⭐ (수정됨) DATABASE_URL 대신 반드시 'url' 이라고 적어야 합니다!
   directUrl = env("DIRECT_URL")
 }
 
