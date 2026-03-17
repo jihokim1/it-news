@@ -27,6 +27,9 @@ orderBy: {
 take: 5000,
 });
 
+// ⭐ [추가] 가장 최근에 작성된 기사의 시간을 추출합니다. (기사가 없으면 현재 시간)
+const latestPostDate = posts.length > 0 ? posts[0].updatedAt : new Date();
+
 // 2. 뉴스 기사 URL 만들기
 const postUrls = posts.map((post) => ({
 url: `${baseUrl}/news/${post.category || "general"}/${post.id}`,
@@ -45,7 +48,7 @@ const routes = [
 "/news/Coin",
 ].map((route) => ({
 url: `${baseUrl}${route}`,
-lastModified: new Date(),
+lastModified: latestPostDate, // ⭐ [수정] 무의미한 현재 시간 대신, 최신 기사 등록 시간으로 완벽하게 고정합니다!
 changeFrequency: "hourly" as const,
 priority: 1.0,
 }));
