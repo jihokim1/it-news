@@ -47,14 +47,14 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
 
-  // 3. 파비콘 및 아이콘 설정
+  // ⭐ 3. 파비콘 및 아이콘 설정 (네이버 캐시 완벽 파괴 버전)
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico?v=2' }, // ?v=2 를 붙여 강제로 새 파일임을 인식시킵니다.
+      { url: '/logo.png?v=2', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/logo.png' },
+      { url: '/logo.png?v=2' },
     ],
   },
 
