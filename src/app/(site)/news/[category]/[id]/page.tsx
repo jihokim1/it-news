@@ -369,7 +369,6 @@ return (
         line-height: 1.65;
         letter-spacing: -0.01em;
         color: #333;
-        /* ✅ [핵심 처방] 이 두 줄이 박사님이 원하는 '꽉 찬 네모'를 만듭니다 */
         text-align: justify;    /* 양쪽 끝 맞춤 */
         word-break: break-all;  /* 단어 잘림 허용 (대신 단어 사이 구멍 안 생김) */
 
@@ -387,7 +386,7 @@ return (
         display: block; 
     }
 
-    /* ✅ [본문 캡션 스타일] 회색, 가운데 정렬 */
+    /* [본문 캡션 스타일] 회색, 가운데 정렬 */
     .view-content figcaption.caption-text {
         display: block;          
         text-align: center;      
