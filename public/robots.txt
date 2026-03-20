@@ -23,3 +23,4 @@ Disallow: /api/
 
 # 트렌드IT 전체 기사 지도(사이트맵) 위치 안내
 Sitemap: https://trendit.ai.kr/sitemap.xml
+Sitemap: https://trendit.ai.kr/news-sitemap.xml
