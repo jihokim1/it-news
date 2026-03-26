@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma";
-// import Link from "next/link"; // ❌ Next.js 링크 삭제 (구글 광고 충돌 원인)
+// import Link from "next/link"; //  Next.js 링크 삭제 (구글 광고 충돌 원인)
 import { NewsSidebar } from "@/components/news/NewsSidebar";
-import Image from "next/image"; // 🟢 Next.js Image 사용 (unoptimized 적용)
+import Image from "next/image"; // Next.js Image 사용 (unoptimized 적용)
 
 /* DB 실시간 반영 설정 */
-// export const dynamic = "force-dynamic"; // ❌ 삭제 (캐싱 적용)
-// export const fetchCache = "force-no-store"; // ❌ 삭제 (캐싱 적용)
-export const revalidate = 60; // 🟢 [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
+// export const dynamic = "force-dynamic"; //  삭제 (캐싱 적용)
+// export const fetchCache = "force-no-store"; //  삭제 (캐싱 적용)
+export const revalidate = 60; // [수정] 60초 캐싱 (뒤로가기 속도 향상 & 메모리 보호)
 
-// 🟢 [핵심 수정] 스토리지 직통 연결 (슈파베이스 이미지 변환 API를 통한 해상도 강제 축소)
+// [핵심 수정] 스토리지 직통 연결 (슈파베이스 이미지 변환 API를 통한 해상도 강제 축소)
 const getOptimizedUrl = (url: string, width: number = 400) => {
   if (!url) return "";
   
@@ -46,41 +46,57 @@ const getCategoryColor = (id: string) => {
 };
 
 export default async function HomePage() {
-  // 1. 전체 기사 가져오기
-  const allNews = await prisma.news.findMany({
-    where: {
-      publishedAt: {
-        lte: new Date(),
-      },
-    },
-    orderBy: { publishedAt: "desc" },
-    take: 70, // 🟢 [수정] 박사님 지시대로 노출 개수 70개로 설정
-  });
+  const now = new Date();
 
-  // 2. 메인 헤드라인 로직
+  //  Promise.all을 사용하여 필요한 기사만 '동시에' 정확하게 타격하여 가져옵니다.
+  const [
+    latestNews, // 메인 상단용 (최신 10개)
+    aiNews,     // AI 카테고리용 (최신 5개)
+    itNews,     // IT 카테고리용 (최신 5개)
+    stockNews,  // 주식 카테고리용 (최신 5개)
+    coinNews,   // 코인 카테고리용 (최신 5개)
+    techNews    // 테크 카테고리용 (최신 5개)
+  ] = await Promise.all([
+    prisma.news.findMany({ where: { publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 10 }),
+    prisma.news.findMany({ where: { category: "AI", publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 5 }),
+    prisma.news.findMany({ where: { category: "IT", publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 5 }),
+    prisma.news.findMany({ where: { category: "Stock", publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 5 }),
+    prisma.news.findMany({ where: { category: "Coin", publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 5 }),
+    prisma.news.findMany({ where: { category: "Tech", publishedAt: { lte: now } }, orderBy: { publishedAt: "desc" }, take: 5 }),
+  ]);
+
+  // 2. 메인 헤드라인 로직 (latestNews에서 추출)
   // @ts-ignore
-  const pinnedHero = allNews.find((n) => n.isPinned === true);
-
+  const pinnedHero = latestNews.find((n) => n.isPinned === true);
   const mainHero = pinnedHero 
     ? pinnedHero 
-    : allNews.find((n) => n.importance && n.importance.toLowerCase() === "high") || allNews[0];
+    : latestNews.find((n) => n.importance && n.importance.toLowerCase() === "high") || latestNews[0];
 
-  // 3. 서브 리스트
-  const subHeroes = allNews
+  // 3. 서브 리스트 및 주요 뉴스 (latestNews에서 추출)
+  const subHeroes = latestNews
     .filter((n) => n.id !== mainHero?.id)
     .filter((n) => n.importance && n.importance.toLowerCase() === "high")
     .slice(0, 4);
 
-  // 4. 주요 뉴스
-  const majorNews = allNews
+  const majorNews = latestNews
     .filter((n) => n.id !== mainHero?.id)       
     .filter((n) => !subHeroes.find(s => s.id === n.id)) 
     .slice(0, 4);
 
-  // 헬퍼 함수
+  // ⭐ [핵심 교정] 미리 가져온 병렬 데이터를 매핑해 줍니다.
+  const categoryMap: Record<string, any[]> = {
+    "AI": aiNews,
+    "IT": itNews,
+    "Stock": stockNews,
+    "Coin": coinNews,
+    "Tech": techNews,
+  };
+
+  // 헬퍼 함수 교정 (전체 필터링 대신 매핑된 배열을 바로 사용)
   const getCategoryData = (catId: string) => {
-    const catNews = allNews.filter((n) => n.category?.toLowerCase() === catId.toLowerCase());
-    if (catNews.length === 0) return null;
+    const catNews = categoryMap[catId];
+    if (!catNews || catNews.length === 0) return null; // 이제 기사가 없어서 깨질 일은 거의 없습니다.
+    
     const headline = catNews.find(n => n.importance && n.importance.toLowerCase() === "high");
     const mainNews = headline || catNews[0];
     const subNews = catNews.filter(n => n.id !== mainNews.id).slice(0, 4);
@@ -89,11 +105,11 @@ export default async function HomePage() {
 
   // ListItem 컴포넌트
   const ListItem = ({ item, isPriority = false }: { item: any; isPriority?: boolean }) => (
-    // 🟢 [핵심 수정] Link -> a 태그로 변경하여 구글 광고 충돌(Back 버튼 오류) 원천 차단
+    // [핵심 수정] Link -> a 태그로 변경하여 구글 광고 충돌(Back 버튼 오류) 원천 차단
     <a 
       href={`/news/${item.category}/${item.id}`} 
       className="flex gap-3 group items-start"
-      // 🟢 [핵심 추가] 60개 렌더링 렉을 없애기 위해, 화면 밖 요소의 렌더링을 생략시키는 CSS 최신 기술 적용
+      // [핵심 추가] 60개 렌더링 렉을 없애기 위해, 화면 밖 요소의 렌더링을 생략시키는 CSS 최신 기술 적용
       style={{ contentVisibility: "auto", containIntrinsicSize: "80px" }}
     >
       <div className="w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative border-2 border-gray-100">
@@ -104,8 +120,8 @@ export default async function HomePage() {
             width={200}  
             height={133} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            unoptimized // 🟢 Vercel 한도 우회
-            // 🟢 [수정] 60개의 네트워크 폭주를 막기 위해, 우선순위가 아니면 지연 로딩 적용
+            unoptimized // Vercel 한도 우회
+            // [수정] 60개의 네트워크 폭주를 막기 위해, 우선순위가 아니면 지연 로딩 적용
             {...(isPriority ? { priority: true } : { loading: "lazy", decoding: "async" })}
           />
         )}
@@ -148,7 +164,7 @@ export default async function HomePage() {
                 lg:rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5">
                 
                 {mainHero ? (
-                  // 🟢 [핵심 수정] Link -> a 태그로 변경
+                  // [핵심 수정] Link -> a 태그로 변경
                   <a href={`/news/${mainHero.category || 'AI'}/${mainHero.id}`} className="block h-full w-full relative">
                     {mainHero.imageUrl ? (
                       <Image 
@@ -157,7 +173,7 @@ export default async function HomePage() {
                         width={800}  
                         height={600} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        priority // 🟢 메인 헤드라인 즉시 로딩 강제
+                        priority // 메인 헤드라인 즉시 로딩 강제
                         unoptimized
                       />
                     ) : (
@@ -213,7 +229,7 @@ export default async function HomePage() {
                       Hot Issue
                     </h2>
                   </div>
-                  {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                  {/* [핵심 수정] Link -> a 태그 */}
                   <a href="/news/all" className="group flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
                     더보기
                     <span className="group-hover:translate-x-0.5 transition-transform">+</span>
@@ -223,7 +239,7 @@ export default async function HomePage() {
                 <div className="flex-1 flex flex-col gap-4">
                   {subHeroes.map((item) => (
                     <div key={item.id} className="flex-1 group relative bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 flex items-center">
-                      {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                      {/* [핵심 수정] Link -> a 태그 */}
                       <a href={`/news/${item.category || 'AI'}/${item.id}`} className="flex gap-4 items-start w-full h-full">
                         <div className="w-32 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
                           {item.imageUrl && (
@@ -233,7 +249,7 @@ export default async function HomePage() {
                               width={200}  
                               height={150} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              priority // 🟢 우측 상단 핫이슈 즉시 로딩
+                              priority // 우측 상단 핫이슈 즉시 로딩
                               unoptimized
                             />
                           )}
@@ -268,7 +284,7 @@ export default async function HomePage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {majorNews.map((item) => (
-                    // 🟢 [핵심 수정] Link -> a 태그
+                    // [핵심 수정] Link -> a 태그
                     <a key={item.id} href={`/news/${item.category || 'AI'}/${item.id}`} className="group block">
                       <div className="aspect-[16/10] rounded-lg overflow-hidden bg-gray-100 mb-2 relative shadow-sm border-2 border-gray-200">
                         {item.imageUrl && (
@@ -278,7 +294,7 @@ export default async function HomePage() {
                             width={300}  
                             height={188} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            priority // 🟢 상단 주요뉴스 즉시 로딩
+                            priority // 상단 주요뉴스 즉시 로딩
                             unoptimized
                           />
                         )}
@@ -302,12 +318,12 @@ export default async function HomePage() {
                     <section key={cat.id} className="border-t-2 border-gray-200 pt-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        {/* [핵심 수정] Link -> a 태그 */}
                         <a href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</a>
                       </div>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                          {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                          {/* [핵심 수정] Link -> a 태그 */}
                           <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
                             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                               {mainCatNews.imageUrl && (
@@ -317,8 +333,8 @@ export default async function HomePage() {
                                   width={500}  
                                   height={281} 
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  unoptimized // 🟢 Vercel 한도 우회
-                                  // 🟢 하단 섹션들은 기본값(lazy loading) 유지
+                                  unoptimized // Vercel 한도 우회
+                                  // 하단 섹션들은 기본값(lazy loading) 유지
                                 />
                               )}
                             </div>
@@ -349,12 +365,12 @@ export default async function HomePage() {
                     <div key={cat.id}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        {/* [핵심 수정] Link -> a 태그 */}
                         <a href={`/news/${cat.id}`} className="text-xl font-bold text-gray-400 hover:text-slate-900">+</a>
                       </div>
 
                       <div className="mb-8">
-                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        {/* [핵심 수정] Link -> a 태그 */}
                         <a href={`/news/${main.category || cat.id}/${main.id}`} className="group block">
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 border-2 border-gray-200 relative">
                             {main.imageUrl && (
@@ -364,7 +380,7 @@ export default async function HomePage() {
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                unoptimized // 🟢 Vercel 한도 우회
+                                unoptimized // Vercel 한도 우회
                               />
                             )}
                           </div>
@@ -401,12 +417,12 @@ export default async function HomePage() {
                   <section className="border-t-2 border-gray-200 pt-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className={`text-xl font-black ${titleColor}`}>{cat.label}</h3>
-                      {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                      {/* [핵심 수정] Link -> a 태그 */}
                       <a href={`/news/${cat.id}`} className="text-sm font-bold text-gray-400 hover:text-slate-900">더보기 +</a>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div className="border-r-0 lg:border-r-2 border-gray-200 lg:pr-8">
-                        {/* 🟢 [핵심 수정] Link -> a 태그 */}
+                        {/* [핵심 수정] Link -> a 태그 */}
                         <a href={`/news/${mainCatNews.category || cat.id}/${mainCatNews.id}`} className="group block">
                           <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4 border-2 border-gray-200 relative">
                             {mainCatNews.imageUrl && (
@@ -416,7 +432,7 @@ export default async function HomePage() {
                                 width={500}  
                                 height={281} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                unoptimized // 🟢 Vercel 한도 우회
+                                unoptimized // Vercel 한도 우회
                               />
                             )}
                           </div>
