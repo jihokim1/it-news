@@ -35,7 +35,7 @@ for (const post of posts) {
 const url = `${baseUrl}/news/${post.category || "general"}/${post.id}`;
 const pubDate = post.publishedAt.toISOString();
 
-// ⭐ 제목은 반드시 페이지의 <title>과 일치해야 하며, 특수문자 안전 처리를 수행합니다.
+// 제목은 반드시 페이지의 <title>과 일치해야 하며, 특수문자 안전 처리를 수행합니다.
 const safeTitle = post.title.replace(/[<>&"']/g, (char) => {
     switch (char) {
     case '<': return '&lt;';
