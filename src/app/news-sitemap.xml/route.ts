@@ -6,14 +6,15 @@ export const revalidate = 0;
 
 export async function GET() {
 const baseUrl = "https://trendit.ai.kr";
+
+// 정확히 48시간 전 기사까지만 (구글 뉴스 규정)
 const twoDaysAgo = new Date();
-twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
 
 const posts = await prisma.news.findMany({
 where: {
     publishedAt: {
     gte: twoDaysAgo,
-    lte: new Date(),
     },
 },
 select: {
@@ -35,7 +36,7 @@ for (const post of posts) {
 const url = `${baseUrl}/news/${post.category || "general"}/${post.id}`;
 const pubDate = post.publishedAt.toISOString();
 
-// 제목은 반드시 페이지의 <title>과 일치해야 하며, 특수문자 안전 처리를 수행합니다.
+// XML 특수문자 안전 처리
 const safeTitle = post.title.replace(/[<>&"']/g, (char) => {
     switch (char) {
     case '<': return '&lt;';
@@ -59,9 +60,8 @@ xml += `      <news:title>${safeTitle}</news:title>\n`;
 xml += `    </news:news>\n`;
 
 if (post.imageUrl) {
-    const safeImageUrl = encodeURI(post.imageUrl);
     xml += `    <image:image>\n`;
-    xml += `      <image:loc>${safeImageUrl}</image:loc>\n`;
+    xml += `      <image:loc>${post.imageUrl}</image:loc>\n`;
     xml += `    </image:image>\n`;
 }
 xml += `  </url>\n`;
@@ -72,7 +72,7 @@ xml += `</urlset>`;
 return new NextResponse(xml, {
 headers: {
     "Content-Type": "application/xml; charset=utf-8",
-    "X-Content-Type-Options": "nosniff", // 보안 헤더 추가
+    "Cache-Control": "no-store, max-age=0", 
 },
 });
 }
