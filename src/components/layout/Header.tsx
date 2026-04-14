@@ -41,14 +41,14 @@ return (
     <div className="container mx-auto px-4 h-16 md:h-20 max-w-screen-xl flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/" className="group flex items-center gap-1">
-            <Image 
-              src="/logo.png"
-              alt="TO.NEWS Logo"
-              width={2050}
-              height={500}
-              className="object-contain h-20 md:h-20 w-auto"
-              priority
-            />
+          <Image 
+            src="/logo.png"
+            alt="TO.NEWS Logo"
+            width={250}  
+            height={60}  
+            className="object-contain h-20 md:h-20 w-auto"
+            priority
+          />
           </Link>
         </div>
         <TopNav />
