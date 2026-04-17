@@ -7,7 +7,6 @@ export const revalidate = 0;
 export async function GET() {
 const baseUrl = "https://trendit.ai.kr";
 
-// 정확히 48시간 전 기사까지만 (구글 뉴스 규정)
 const twoDaysAgo = new Date();
 twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
 
@@ -36,7 +35,6 @@ for (const post of posts) {
 const url = `${baseUrl}/news/${post.category || "general"}/${post.id}`;
 const pubDate = post.publishedAt.toISOString();
 
-// XML 특수문자 안전 처리
 const safeTitle = post.title.replace(/[<>&"']/g, (char) => {
     switch (char) {
     case '<': return '&lt;';
@@ -60,13 +58,24 @@ xml += `      <news:title>${safeTitle}</news:title>\n`;
 xml += `    </news:news>\n`;
 
 if (post.imageUrl) {
+    const safeImageUrl = post.imageUrl.replace(/[<>&"']/g, (char) => {
+        switch (char) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '"': return '&quot;';
+            case "'": return '&apos;';
+            default: return char;
+        }
+    });
+    
     xml += `    <image:image>\n`;
-    xml += `      <image:loc>${post.imageUrl}</image:loc>\n`;
+    xml += `      <image:loc>${safeImageUrl}</image:loc>\n`; 
     xml += `    </image:image>\n`;
 }
-xml += `  </url>\n`;
-}
 
+xml += `  </url>\n`; 
+} 
 xml += `</urlset>`;
 
 return new NextResponse(xml, {
