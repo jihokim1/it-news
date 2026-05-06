@@ -84,10 +84,10 @@ export default function RootLayout({
         
         {/* ⭐ [에러 소멸] 구글 애드센스: Next.js Script 꼬리표 에러를 막기 위해 순수 HTML 태그 사용 */}
         <script 
-          async 
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375" 
-          crossOrigin="anonymous" 
-        ></script>
+        async 
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375" 
+        crossOrigin="anonymous" 
+      ></script>
 
         {/* 메인 콘텐츠 */}
         {children}
