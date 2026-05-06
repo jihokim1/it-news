@@ -41,16 +41,16 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "트렌드IT - 대한민국 No.1 IT 뉴스",
     description: "오늘의 IT 이슈와 실시간 앱 랭킹을 한눈에 확인하세요.",
-    images: ["/logo.png"],
+    images: ["/logo-v2.png"], // ⭐ [캐시 파괴]
   },
 
   icons: {
     icon: [
       { url: '/favicon.ico?v=2' }, 
-      { url: '/logo.png?v=2', sizes: '32x32', type: 'image/png' },
+      { url: '/logo-v2.png', sizes: '32x32', type: 'image/png' }, // ⭐ [캐시 파괴]
     ],
     apple: [
-      { url: '/logo.png?v=2' },
+      { url: '/logo-v2.png' }, // ⭐ [캐시 파괴]
     ],
   },
 
@@ -82,12 +82,12 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8F9FA] text-slate-900 antialiased font-sans`}>
         
-        {/* 구글 애드센스: 화면 렌더링이 다 끝난 후(lazyOnload)에 천천히 로드하여 속도 저하 방지 */}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375"
-          crossOrigin="anonymous"
-          strategy="lazyOnload" 
-        />
+        {/* ⭐ [에러 소멸] 구글 애드센스: Next.js Script 꼬리표 에러를 막기 위해 순수 HTML 태그 사용 */}
+        <script 
+          async 
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3987387348804375" 
+          crossOrigin="anonymous" 
+        ></script>
 
         {/* 메인 콘텐츠 */}
         {children}

@@ -42,7 +42,7 @@ return (
         <div className="flex items-center gap-4">
           <Link href="/" className="group flex items-center gap-1">
           <Image 
-            src="/logo.png"
+            src="/logo-v2.png"
             alt="TO.NEWS Logo"
             width={250}  
             height={60}  
